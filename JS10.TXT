@@ -1,0 +1,26 @@
+980502 By James Rubingh             
+
+              лллл   ллл     л    лл
+               л    л   л   лл   л  л
+               л    л        л  л    л
+               л     ллл     л  л    л   JSnake v1.0
+            л  л        л    л  л    л       
+            л  л    л   л    л   л  л
+             лл      ллл  л ллл   лл
+
+        This is a version of the classic game Nibbles. 
+  There is nothing very complicated in this source code (included) and it is intended 
+  for people who dont know anything to learn assembly from. The source 
+  code took a very short time to make, yet is quite small. Without the 
+  title picture it is only about 730 bytes! I think that is quite small 
+  for a functional game. Anyways...
+
+CONTROLS:
+        The direction keys are the only controls, hit the apples 
+        to get longer and after a short while, the game will be 
+        over (Not real action packed).
+
+Please send Questions or comments to 
+                        ephesus@gmail.com
+
+Have fun playing!
