@@ -1,3 +1,5 @@
+;THX1138 by James Rubingh james@wrive.com
+
 .include crash82.inc
 .db "THX 1138 82",0
 

@@ -1,0 +1,48 @@
+Arkanoid v.08 ACZ
+by James Rubingh
+james@acz.org
+2855 bytes PRGM
+1936 bytes STRNG (optional)
+
+Arkanoid is a classic ATARI game I believe (ive never played it) where 
+you try to destroy the bricks at the top by hitting them with the ball
+which you aim with the paddle.
+
+This version has 4 bonuses: extra life, 50 points, protection wall and paddle
+expander.
+
+Installation:
+  Just load onto the calculator the Arkanoid.86p file, and the arktitle.86s file.
+If you are running a little low on memory, you can delete the arktitle.86s file
+to save 2k. Then just use Asm(Arkanoid or run a shell. This version runs badly
+with AShell (the very old version that doesnt emulate 85 strings, not ASE) and 
+
+
+KEYS:
+  F1: exit to homescreen and save game (teacher key)
+  Left-Right: move the paddle
+  Up: hold it down to move the paddle slowly
+  More: Pause
+  EXIT: normal exit back to homescreen
+
+I dont know of any bugs so far that are terminal (will result in crash) however 
+the ball can be hard to see if you dont turn the contrast up, and IMPORTANTLY
+for some reason the way some shells work, if you do a Teacher Key, the next 
+time that you try to run the shell it may execute my game instead... You will 
+have to use the Asm( function on another program to make the shell come up
+again, i dont know why this happens (it happens with kirk meyers SimCommunity
+2k and any other game that uses a force out, as well). This is not a flaw in Arkanoid,
+rather its a side effect of a certain ROM call and the way some shells run games.
+Rascall v.9, ASE (every version ive tried), and mosaic shell all run Arkanoid well.
+
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+Future versions will only be made if i get emails that say that people want some
+more stuff implemented, because I want to program something else now. Please
+report any bugs (even though nobody ever does) to james@acz.org
+
+External levels are not included with this version. If people email me saying that
+I should add them, then I might add them in a future version. 
+
+http://www.acz.org
+http://members.tripod.com/~jaymzroo

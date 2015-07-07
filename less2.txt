@@ -48,7 +48,7 @@ push them and pop them back, totaling in 22 clockcylces to push and pop
 alone!! Its just better.
 "2 clockcycles, big deal!" youre thinking. Well two here and two there,
 after a while, if you have a lot, you may save 20-30 clockcylces, plus if
-your looping 20 times a second in your game, thats 2 clockcycles times
+youre looping 20 times a second in your game, thats 2 clockcycles times
 20 loops a second, 40 clockcycles a second faster!!!
 
 Now we'll take a look at the clock cycles for the different algorithms.

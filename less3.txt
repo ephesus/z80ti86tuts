@@ -9,7 +9,7 @@ also, if its a good shell, will auto-detect any games on the calculator.
 The way that this is accomplished is by use of the VAT (variable  
 allocation table). You might ask, "why would you want stuff stored  
 outside your program anyways??", well its conveniant for the gamer to be 
-able to load just the levels that they want onto there calculator at once. 
+able to load just the levels that they want onto their calculator at once. 
 Then the game could have many levels, taking up far more space than is  
 available on the calculator, and then loading each level individually to 
 the calc. 

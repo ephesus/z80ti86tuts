@@ -35,7 +35,7 @@ just add together your operand, for example:
   add hl,hl | 160*2 = 320               || 
                 
 ok that is pretty obvious and simple. Now lets divide by powers of 2, not 
-that much harder. Just use the SRL command. It inserts a 0 in the bit 7 
+that much harder. Just use the SRL command. It inserts a 0 in bit 7 
 and shifts everything to the right, dividing by 2. If you understand this you 
 can go to the example. Otherwise, think of the number 100 in decimals. If you  
 shift it to the right one place, it is dividing by 10. 100->10. Because  
@@ -60,7 +60,7 @@ heres one that doesnt come out perfectly
  
 Youre probably thinking, "8 times 6 doesn't equal 50??". True, where is the  
 remainder? In the bits that were rotated out the LSB (least significant bit) 
-side of the bite. Hmm... The first time, from 50 to 25 a "0" came out, a "1" 
+side of the byte. Hmm... The first time, from 50 to 25 a "0" came out, a "1" 
 the second time and a "0" the third. Well, if you mask out the last 3 bits 
 from the operand before you even start, you know the remainder! so, 
  
