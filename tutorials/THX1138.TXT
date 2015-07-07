@@ -1,0 +1,23 @@
+THX 1138
+original by Brandon Turok (86)
+port by James Rubingh (82)
+
+Well, thx1138 is a very very simple game. You just steer the line around
+the screen and dont hit anything. The controls are the arrow keys and you
+can press either clear or mode to quit.
+
+The actual game is nothing special, but...
+
+Its only 601 bytes big! I thought that this was pretty small considering i
+did no optimizing and 79 bytes of that is just the text ascii characters.
+well, have fun. 
+
+Questions?
+email:    jaymzroo@juno.com
+IRC:      jaymzroo
+webpage:  http://members.tripod.com/~jaymzroo/phat.html
+
+By the way, I dont program much 82 assembly, but i love my 86! that is 
+what my page is about. If you are looking for an 82, dont even bother, my
+page is strictly 86.
+  Have fun. hasta luego
