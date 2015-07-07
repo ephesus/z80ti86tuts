@@ -1,0 +1,271 @@
++-----------------------------------------------------------------------+ 
+|            LESSON 3: THE VAT INTRODUCTION TO VARIABLES                | 
++-----------------------------------------------------------------------+ 
+Have you ever seen a game where the program automatically detects outside  
+programs? For example SQRXZ 1.0 or Plain jump by Jimmy Mardell.
+They automatically detect any of thier levels on the calculator. Or,  
+maybe you use a shell on your ti-86 to run assembly 86 or 85 games. This 
+also, if its a good shell, will auto-detect any games on the calculator. 
+The way that this is accomplished is by use of the VAT (variable  
+allocation table). You might ask, "why would you want stuff stored  
+outside your program anyways??", well its conveniant for the gamer to be 
+able to load just the levels that they want onto there calculator at once. 
+Then the game could have many levels, taking up far more space than is  
+available on the calculator, and then loading each level individually to 
+the calc. 
+   Be careful when reading this lesson, i brush up on a few assumed 86 
+principles like the paged RAM and ROM, if you want more information, 
+look at '86ports.txt' or other helpful assembly reference files. 
+ 
+ 
+To begin, a quick review of the ti-86's ram and rom: 
+   The ti-86 can only access 64k of memory at a time. The 64K is split 
+   into 4 areas, the first 16k is ROM PAGE 0, it is static (fixed), the 
+   second area is the area to SWAP ROM pages (usually), and the third 
+   area is to swap RAM pages, and the fourth 16k is a static RAM page,  
+   it contains all the RAM locations used by the ROM. So when you want 
+   to view a certain area of memory (either ram or rom), you must first 
+   "swap" it into the accesable area. There are 15 (??? im doing this  
+   from memory, and i dont remember exactly) swappable pages to copy to 
+   the accesable area. After the RAM page has been swapped in, it  
+   usually goes at, $8000 to $BFFF. The ROM when swapped in usually  
+   goes to $4000 to $7FFF, ROM not important in this lesson though.  
+   Another useful way of adressing the memory is Absolute adressing. The  
+   rom has routines that will automatically swap in the correct page, if 
+   you use a 24 bit pointer, usually AHL, or BDE. Absolute address 
+   24 bit pointers can be converted into asic pointers that are only 
+   16 bit. It assumes the first byte of the 24 bit address to be 2. one 
+   way of converting this is 'call $4633', this returns the RAM page in 
+   A and the asic address in HL. 
+ 
+"Well, what the hell does the VAT DO??" youre probably saying. The VAT  
+(also known as the symbol table, variable-symbol whatever!!), is a table  
+"listing" if you will, of all the variables on the calculator. It has  
+all those annoying real numbers, pictures, strings, programs, lists,  
+everything! The vat is stored at the END of RAM page 7. So to view the 
+VAT, you swap RAM page 7 into the area $8000 to $BFFF, by the way, this 
+is all done with the ports (5 and 6), but there exist ROM routines so 
+you dont have to do anything hard! So after you have swapped into the 
+RAM access area ($8000-$BFFF using 'call SWAP_RAM7'=$47F3), the start  
+of the VAT is at $BFFF cause the VAT is built backward, and is located 
+at the end of RAM page 7. 
+  As you move backward, each variable is an entry looking like this: 
+ 
+  Sign byte | abs address | trash byte | Length of name | Name   
+   $BFFF        $BFFE    ect...          
+ 
+As you can see, the first byte of the entry is a sign byte, telling  
+which kind of variable it is, LIST, PROGRAM, STRING, ect... The sign 
+byte is only the lower five bits of the byte, so to get the type, do a 
+quick "and %00011111".  
+The next bytes  are L then H then A of AHL, which is the absolute pointer  
+to the data of the variable. THE DATA IS NOT STORED AT THE SAME LOCATION 
+IN THE MEMORY AS THE TITLE. The name is used to identify and locate the 
+data, stored somewhere else in the calculators memory (pages 2-6 I bet). 
+Then there is the trash byte, i think Optic said it was a flag byte. 
+Then the next byte is the length of the name, its always in the range  
+1-8 Then the next byte is a flag byte used by the ROM, we dont need it, 
+Remember, since the VAT is built backwards, $BFFF is the sign byte of  
+the first variable, then you DEC the pointer to get to the length of the 
+name, then DEC to get to the actual name, and so on. 
+   If you KNOW the name of a file and want to find it on the calculator 
+you DONT use the VAT, you use rst $20 and rst $10. explained later on 
+after the example below. 
+ 
+Now to the fun stuff, searching the VAT! If you want to search the VAT 
+then you swap in page 7 to get the table to be at $BFFF, then you check  
+the sign byte and other parameters to see if its your game. 
+Here is an example from my game Bored Generation 2, this is the search 
+engine used to find bored generation strings holding the level data. They 
+all have a header of $c9 then 0. That is because i started out saving all 
+the levels as programs, so the first byte was the command 'ret' which 
+equals '$c9', i just never changed the header, i guess i could. By the  
+way, a header is putting specific bytes at the beggining of your data  
+file so that it is 'special' from just a normal string or program. Just  
+so that you can tell it apart from other variables on the calculator. 
+ 
+  
+ xor a            ;ld a,0 
+ ld (nolvl),a     ;clear the number of levels byte 
+ call SWAP_RAM7   ;i explained this above (kinda!) It is swappind in 
+                  ;RAM page 7 into the area at $8000 to $BFFF 
+ ld ix,GRAPH_MEM  ;this is where im going to store the titles 
+ ld hl,$BFFF      ;The beggining of the VAT, built backwards 
+search: 
+ ld de,($D298)    ; VAT_END, byte after the end of the last VAT entry 
+ inc de           ; this is because as we search the loop will always 
+ or a             ;come back up to here pointing to the byte after the 
+ sbc hl,de        ;last VAT entry checked. If we want to produce a carry 
+ jp c,Searchend   ;it has to be increased, then subtract the end from 
+                  ;start, if we are past the end point, then quit the  
+                  ;search 
+ add hl,de        ;if not, restore the pointer aiming at the VAT 
+ ld a,(hl)        ;get the sign byte 
+ and %00011111    ;mask out the upper 3 bits to get the type 
+ dec hl           ;move pointer to the next byte in VAT   
+ ld e,(hl)        ;Load the absolute pointer into ADE, not A yet though 
+ dec hl           ;because the type is still in there! 
+ ld d,(hl) 
+ dec hl 
+ cp $0c           ;compare it here because we are about to rewrite A 
+ ld a,(hl)        ;ADE = ABS to data 
+ dec hl           ;skip the trash-flag-shitty-byte 
+ dec hl           ;(hl) = NL of entry 
+ jr nz,Not        ;jump if it wasnt a string to Not, we compared earlier 
+ push hl          ;push NL of entry 
+ ex de,hl         ;ahl = data  ade used to equal data 
+ call $4c3f       ;skip length increases AHL by 2, the DATA pointer 
+                  ;not the VAT pointer 
+  
+ ld c,a           ;push AHL   a->c   hl->stack 
+ push hl          ;abs pointer 
+ call GETB_AHL    ;get byte at ahl changes hl and A 
+ cp $c9           ;compare it too my header 
+ pop hl           ;pop AHL, cant jump with out popping what we push! 
+ ld a,c            
+ jr nz,BHNot      ;wrong header?? not one of my levels then! 
+ call INC_AHL     ;otherwise skip the header we just checked, and check 
+ call GETB_AHL    ;the next one 
+ or a             ;is it zero? 
+ jr nz,BHNot      ;not one of my games if it wasnt zero 
+ 
+  ;ITS A VALID BG2 LEVEL! HOORAAY!! 
+ 
+  call SWAP_RAM7  ;it was my game!! swap in VAT 
+  pop hl          ;pop the pointer 
+  push hl         ;push it again 
+  ld a,(hl)       ;name length of the name 
+  ld (ix),a       ;copy the Name to an area so i can look at it later 
+                ;kind of like making a VAT of all my levels on the calc 
+  ld b,a 
+  push ix 
+copytitle: 
+  inc ix          ;by the way, since the VAT is built backways, but  
+                  ;"my" record of levels isnt, ix INC and hl DEC 
+  dec hl          ;I hope you kinda understand, no matter if you dont 
+  ld a,(hl) 
+  ld (ix),a 
+  djnz copytitle 
+  pop ix        ;use 9 bytes for MY table of levels 8 for name 
+  ld de,9 
+  add ix,de 
+  ld a,(nolvl)  ;we found one more of my levels 
+  inc a 
+  ld (nolvl),a 
+ 
+ 
+BHNot:            ; swap the vat back in, because a different RAM page 
+ call SWAP_RAM7   ; might have been swapped in other than 7 
+ pop hl           ; pop the vat pointer 
+Not: 
+ ld b,(hl)        ;skip the name, and then youre pointing at the next 
+ inc b            ;Vat entry's sign byte!! 
+SkipName: 
+ dec hl 
+ djnz SkipName 
+ jr search        ;loop again and check the next variable 
+ 
+ 
+Searchend: 
+ ld a,(nolvl) 
+ or a 
+ jr z,NOLEVELS                  ;check for no levels 
+        ;we will find the second level 
+ ld a,2 
+ ld c,a 
+ add a,a 
+ add a,a 
+ add a,a 
+ add a,c 
+ ld hl,GRAPH_MEM 
+ adc a,l           ;simulated 16 bit addition 
+ ld l,a 
+ adc a,h 
+ sub l 
+ ld h,a 
+ dec hl            ;this is so that the length of the name goes into 
+                   ;the second byte of OP1, not the first (sign) 
+ rst 20h           ;copy 10 bytes to OP1, see below 
+ rst 10h           ;call FIND_SYM, see below 
+ jr AHLnowEQUALSpointer2data 
+ 
+ 
+NOLEVELS:               ;If there are no levels on the calculator 
+ ld hl,msgNoLevels      ;Show a string that says "NO levels found" 
+ ld bc,$0302            ;or whatever to show that there arent levels 
+ ld (_curRow),bc 
+ call _puts 
+ call _wait 
+ ret 
+msgNoLevels:  .db "There are No levels on this calculator",0 
+ 
+After this search of the vat, an variables that were identified as  
+valid levels have thier names copied into an array, in this case I just 
+used the GRAPH_MEM. First in my buffer there is one byte that tells the  
+length of the title of the variable, and then the actual characters of  
+the title. each entry that was made is exactly 9 bytes, less are used 
+though if the name is less than 8 bytes. So to find the title of the 
+4th entry in MY table, just times 4 by 9, and then you have the length 
+of the name, and then the next few bytes are the name itself. Simple if 
+you think about it, 9 bytes for an entry, 4th entry so 4 * 9 = entry. 
+   The VAT is used if you dont know the title of the program, if you do  
+know the title of the program however, then it is very simple to find a 
+variables data. The OP1 "register" is used to store the title of the  
+variable, each OP register is 11 bytes, the first byte is a sign byte of 
+the variable, the next byte is the length of the name, and then the name 
+itself. The last byte is always unused (when dealing with variables that 
+is, OP registers are also used with floating point numbers). When  
+finding a variable in memory, the type byte is not needed. So we load  
+into Hl a pointer to 1 byte before the length-of-the-name byte, then copy 
+those bytes to OP1. This is easily done with restart 20h. 'rst 20h' is  
+just like a ROM call to $0020. It copies ten bytes from (hl) to OP1.  
+Since we set the pointer to one byte before the length of the name, the  
+length of the name byte will be copied into OP+1, not OP1. That is good 
+because we dont want the length in the first byte at OP1, since that is  
+supposed to be the sign byte (which doesnt matter in finding). 
+   After we have done a rst 20h we need to execute a rst 10h, which finds 
+the variable data to the name stored in OP1. It will return a 24 bit 
+Absolute adress to the data. The first word at the absolute adress is the 
+length of the data, then the next would be the first words of the actual 
+program, or string, or whatever the variable type is. The 24 bit pointer  
+is returned in BDE (The ROM uses wither BDE or AHL for all its ROM  
+routines. Also if you are searching for a file and it isnt on the calc 
+a carry will result. 
+  Here is an example: 
+                   ;this will find variable 'James' in the memory 
+  ld hl,Name 
+  rst 20h 
+  rst 10h 
+  ex de,hl 
+  ld a,b 
+  jr c,There_IS_no_FILE_by_THAT_name_ON_the_CALC 
+ 
+  call GETB_AHL    ;$46C3, Be warned, this call turns the absolute  
+                   ;address into an asic address to the data. An asic 
+                   ;adddress to the data is a 16 bit pointer. Data can 
+                   ;then be transfered using (hl), more later. 
+ 
+Name: 
+  .db $0c,5,"James" ;we included the sign byte, though it isnt needed     
+                    ; we could have loaded Name-1 into the OP register 
+                    ;and then had,      Name:  .db 5,"James" 
+ 
+   This is why we had to copy the titles of all the variables that we  
+found on the calculator that we thought were out levels, we needed to 
+use that title later to get a fix on the location of the data. 
+   For more information, go to Cyber Optic's research and development 
+page (link from my page), He discusses in more detail the OP psuedo  
+registers and Floting Point Variables, and related ROM routines for ABS 
+adressing. I did this entire lesson in one sitting, all from memory so 
+im sure that there are a few errors and stuff, please tell me if you 
+find one, it would be very helpful. I decided to end this because i am 
+getting sick of typing!  =) 
+ 
+ <--------------------------------------------------------------------> 
+ < thanx for reading, send comments, corrections to ephesus@gmail.com > 
+ <      http://www.wrive.com                                          > 
+ < this was by far the most confusing of all the lessons that i have  > 
+ < written so far, sorry about that                                   > 
+ <   ANY SUGGESTIONS FOR LESSON #4 ? MAIL ME!!! ephesus@gmail.com     > 
+ <--------------------------------------------------------------------> 
+

@@ -1,0 +1,101 @@
+------------------------------------------------------------------
+   Lesson 2:  [simulated 16 bit addition]
+------------------------------------------------------------------
+
+Have you ever been programming and needed to add one of the 8 bit
+registers, to a 16 bit register pair? For example, you set hl to
+point to the first byte of a table. Then you want the A-th byte (the
+byte at HL+A). So one way to do this is to ld c,a \ ld b,0 \ add hl,bc
+Now this way works fine. But this destroys bc and if you need the other
+register pair, you'lle have to push it to the stack, 11 clockcycles
+for each push and pop! But if you are doing this, and speed is of the
+essense, (like in a findpixel routine) then you might want to use the
+"simulated 16 bit addition". Or if you see this used, and wonder what
+is going on, here is a short explanation. Please note, i am not a
+teacher or a genius, so give me a break if stuff is incorrect or not
+said properly.
+
+Okay, lets look at the basic concept of the simulated 16 bit addition.
+Since you will always be adding 8 or less bits to the 16 bit register
+pair, you will never need more than 9 bits (unless its negative, in
+which case i dont know if this works cause it doesnt change bit 15 of
+the register pair. Can someone tell me maybe?) If when you add the 8
+bit register to the lower 8 bit register of the pair, if it is greater
+than 255 a carry will result acting as the ninth bit. The answer could
+never exceed 9 bits, %111111111 = 511 (nine bits), %11111111+%11111111
+=510 (8 bits plus 8 bits). So no problem there.
+
+ex. 1:
+    L= 100  A=100
+        adc a,l       
+    result:                        8 bit answer 9th bit is the carry
+       L=100  A=200  c=0 -------> %011001000=200
+
+ex. 2:
+    L=156  A=100
+        adc a,l
+    result:                     lower 8 bits are A  9th bit, the carry
+       L=100  A=0  c=1--------> %100000000=256
+
+So according to these conclusions, if we add A to L (lower byte of the
+register pair, HL in this case), and then add the carry to H, (the real
+9th bit of the 16 bit register pair) then we have added A to HL
+sucessfully.
+"Why the shit would i want to do that?", youre thinking. Its all for the
+extra speed. Its not that complicated and it is faster by 2 clockcycles.
+Plus if you dont want to destroy another register pair, you would have to
+push them and pop them back, totaling in 22 clockcylces to push and pop
+alone!! Its just better.
+"2 clockcycles, big deal!" youre thinking. Well two here and two there,
+after a while, if you have a lot, you may save 20-30 clockcylces, plus if
+your looping 20 times a second in your game, thats 2 clockcycles times
+20 loops a second, 40 clockcycles a second faster!!!
+
+Now we'll take a look at the clock cycles for the different algorithms.
+
+  4   ld c,a            4   add a,l
+  7   ld b,0            4   ld l,a
+  11  add hl,de         4   adc a,h
+                        4   sub l
+                        4   ld h,a
+
+ ----                 ----
+  22  total            20 total     2 clockcycles faster
+
+Okay thats it for this lesson, now i'll just show a quick example. Please
+send comments, ideas, or corrections to <ephesus@gmail.com>. They will be
+corrected immediately.
+
+EX. 1:
+  Pretend we are making a game where there is a gravity table. When your
+man just started jumping, he will go up more pixels than when he is at the
+peak of his jump, to create the illusion of gravity, right?
+
+jdist = _textShadow ;this is going to be how far into the jump your man is
+
+loop:
+  ld hl,gravitytable
+  ld a,(jdist)      ;how far should we go into the table
+  add a,l           ;add the 8 bit number to the lower 8 bits of the    
+  ld l,a            ;register pair, store any overflow in the carry
+                    ;the result is stored in A, but we want it in L
+                    ;so...  ld l,a
+  adc a,h           ;add any over flow into h. We want adc h but that
+                    ;isnt allowed, so we do this.
+  sub l             ;all we want is the carry added, not the contents of
+                    ;A too, so we subtract L (L=value of A that was added
+  ld h,a            ;before, a has changed since then) .
+  ld a,(hl)         ;load into A the byte pointed to by HL, voila!!
+
+  ;Do something with that number whatever you want
+
+
+
+gravitytable:
+        .db 3,3,3,3,2,2,2,2,2,1,1,1,1,0,0
+
+
+-----------------------------------------------
+James Rubingh
+ephesus@gmail.com
+http://www.wrive.com

@@ -1,0 +1,177 @@
+------------------------------------------------------------------------- 
+            LESSON 5: INTRODUCTION TO INTERRUPTS 
+------------------------------------------------------------------------- 
+ 
+You're probably wondering, what exactly is an interrupt? Are they useful 
+in any way? Well, actually interrupts are a very useful application. 
+ 
+Basically an interrupt is a call, initiated by the hardware to a certain 
+area in the calculators memory. It is called about 200 times a second, 
+and it is possible to have your own little assembly program run every 
+single time! Don't think that 200 times a second is a whole lot, it really 
+isn't that fast, but it is fast enough to be very useful. 
+   Interrupts are always being executed no matter what is going on. This 
+means that you can make something happen at a constant speed behind your 
+normal program, for example a counter, clock or greyscale. You may think 
+"that sounds pointless" but it has its benefits. For example, if you don't 
+turn your interrupt off after you exit your main ASM program it will keep 
+being executed, and no one will know unless a visual indicator is given. 
+So you could have your own program being executed in the background of the 
+ti-os, or you could make a program that takes a screen shot whenever ON is 
+pushed, there are many possibilities. 
+   On the ti-86 calculator (or all z80 processors) there are three modes 
+of interrupts 0, 1, and you guessed it... 2! interrupt mode 0 is NEVER 
+used on the ti-86, the reason being that it forms the location for the 
+interrupt at whatever is on the data bus. But we have no control over the 
+things on the data bus (that i know of), so it is useless. Interrupt mode 
+2 is a valid, if you think of HL as a pointer to the interrupt code to be 
+executed, then in IM 2 the H part would be the I register, and the L part 
+is random. Then it jumps to that location -HL-, and starts executing code. 
+I dont know exactly any benefits to using IM 2 instead of IM 1 so i always 
+use IM 1. Now for interrupt mode 1, (the mode that i use). 
+   Since this is an introduction to interrupts im only going to describe 
+interrupt mode 1, though many aspects of interrupt mode 1 are similar to 
+interrupt mode 2. 
+  Interrupt mode 1 is a call made to $38 on ROM page 0 every 200th of a 
+second. At $38 the ROM checks a certain flag, and if it is set (1) then 
+it checks the checksum of the user interrupt code and if its ok it will 
+execute a "call $d2fe", that's where you store your interrupt, otherwise 
+it ends the interrupt right then. If the correct flag is set, the checksum 
+is right, then your interrupt code will be executed at $D2FE with a simple 
+call command. The checksum is a value stored at $D2FD (one byte before the 
+actual interrupt code). It is the value of the 1st, 40th, 80th, 120th, 
+160th, and 200th bytes of the interrupt code. It is a value of 1 byte, in 
+other words it wraps around after 255 (%11111111). If you just keep adding 
+to the same byte it will wrap itself automatically, don't worry. Then when 
+the ROM is checking the checksum, it will subtract all those locations and 
+compare it with zero, to get it to equal zero we ADD all those locations 
+before the ROM subtracts all the locations to get it to equalize. It 
+sounds more confusing than it really is. 
+  ENOUGH WITH THE TALKING, HERES SOME SAMPLE CODE: first I'll show you an 
+example and then I'll try to explain anything i feel needs elaboration. 
+ 
+ 
+ .include asm86.h 
+ .include ti86asm.inc 
+ .org _asm_exec_ram 
+ 
+_INT_RAM = $D2FD        ;pointer to the checksum byte 
+ 
+  call _clrLCD          ;      Do I really have 
+  call _runindicoff     ;<--  to teach THIS??  :) 
+ 
+  res 2,(iy+$23)      ; Turn off the interrupt flag, i guess so that your 
+              ; interrupt wont get called before its fully installed, but 
+              ; I dont think it could get called early anyways, more later 
+             ;also you can use bit 3 if you want an ON routine, more later 
+ 
+ 
+   ld hl,int       ;copy our code to the area the interrupt is called from 
+   ld de,_INT_RAM+1 
+   ld bc,int_end-int 
+   ldir 
+    
+   ld a,(_INT_RAM+1)  ;set up checksum byte 
+   ld hl,_INT_RAM+40 
+   add a,(hl) 
+   ld hl,_INT_RAM+80 
+   add a,(hl) 
+   ld hl,_INT_RAM+120 
+   add a,(hl) 
+   ld hl,_INT_RAM+160 
+   add a,(hl) 
+   ld hl,_INT_RAM+200 
+   add a,(hl) 
+   ld (_INT_RAM),a 
+ 
+   set 2,(iy+$23)    ;turn it on 
+   ret 
+      ;remember this is where the program being executed at _asm_exec_ram 
+      ;ends, everything after this is executed during the interrupt. In 
+      ;other words, the interrupt is done being installed. 
+ 
+int: 
+   push af 
+   push bc 
+   push hl 
+ 
+   ld hl,$fc0f          ;load into $fc0f       
+   ld de,pic            ;load from the pic bitmap 
+   ld b,6               ;six lines 
+loop: 
+   ld a,(de)            ;get one byte of the bitmap 
+   ld (hl),a            ;save it in the pointer 
+   inc de               ;add to the next byte of the pic 
+   ld a,l               ;increase hl by 16 (next row down on screen) 
+   add a,16 
+   ld l,a 
+   djnz loop            ;loop six times 
+    
+   pop hl 
+   pop bc 
+   pop af 
+   ret 
+ 
+pic = $-int+_INT_RAM+1 
+   .db %01111111 
+   .db %01111111 
+   .db %00001100 
+   .db %11001100 
+   .db %11111100 
+   .db %01111000 
+int_end: 
+ 
+.end 
+ 
+ 
+   Okay, this is a sample routine. This is called a TSR (terminate stay 
+resident) program. It doesnt terminate because it will be executed until 
+the flag is cleared, or the checksum doesnt add up. You could make another 
+program and just put a res 2,(iy+$23) and this would remove the interrupt. 
+  About the interrupt routine, i learned all that i know about interrupts 
+from Cyber Optic 2000's ti-86 reasearch site, and Joshua grams ti-86 site, 
+both links can be found at my website (i learned mostly from joshua). 
+  The main part of the source copies my user interrupt code to the correct 
+memory location using LDIR, (hl=source DE=destination BC=number of bytes 
+to move, then do a ldir), then it sets up the checksum byte and stores it 
+right into the correct location. Then it sets the flag and exits the main 
+program. Normally if you wanted a counter during your game, you would 
+install the counter as interrupt code then instead of exiting the game, 
+you would put all your game code and then before finally exiting, you 
+would clear the user interrupt flag so that it isnt a TSR program any more. 
+Also remember that interrupts are ALWAYS called, you never know what the 
+calculator is doing at the time, so... since all ROM calls are called 
+from page $D (then they jump to the actual routine somewhere else, used 
+for compatibility between ROM versions, page $D will never be changed.) 
+you might want to change the ROM page to $D IF you use a ROM call like 
+_puts. remember to save the current page though so you can swap it back! 
+ 
+ in a,(5)       ;get the ROM page 
+ push af        ;Push the initial ROM page 
+ ld a,$d 
+ out (5),a 
+    ;do your interrupt stuff 
+ pop af         ; pop the initial ROM page 
+ out (5),a 
+ ret            ;return from the interrupt 
+ 
+     - YOU ONLY HAVE TO DO THIS IF YOU USE A ROM CALL! - 
+ 
+  I hope that this clears up any confusion about IM 1 programming and TSRs. 
+If there are any more questions PLEASE contact me! There are many parts 
+that i just skimmed over, and that i dont understand myself! 
+  Okay, before i finish i just want to tell you about one other thing that 
+I think is cool. If you use $D48F instead of $D2FD and use bit 3 instead 
+of bit 2 of the user routine flag, then you can make a on routine!! 
+It is installed with identical routines, in other words you could use the 
+same code above and then display, "James rubingh's calculator" every time 
+you turn the calculator on!! (just remember to change the rom page to ROM 
+page $d so that your _puts wont be messed up. Do this at the start of 
+your routine that is installed). 
+ 
++------------------------------------------------------------------------+ 
+| James Rubingh                                                          | 
+|       ephesus@gmail.com                                                |
+|   http://www.wrive.com                                                 |
++------------------------------------------------------------------------+ 
+         Send any comments or suggestions or request!

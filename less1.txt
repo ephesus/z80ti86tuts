@@ -1,0 +1,130 @@
+Ephesus's  
+Lesson 1: 86 Find Pixel routine   
+Please email me with any mistakes!  <ephesus@gmail.com> 
+ 
+Anyone who has programmed the Ti-85 or Ti-86 calculators in Assembly, most 
+likely know about the VIDEO_MEM ($fc00 in both cases, 85 or 86). If you have 
+used it you know it can be hard to find just one pixel since 8 pixels are  
+stored in one byte, each pixel getting a corresponding bit in the byte. 
+Well, on the 85 one needs only to type "CALL_(FIND_PIXEL)", however on the  
+ti-86, there is no ROM routine to find the right byte for you (as far as I  
+know). For the 85 authors that want to know how that command works, and for  
+the 86 authors who would like to know, and have a routine at hand, I will try  
+to explain it in "normal-people-english". 
+ 
+First of all you need to know the basic concept of how it works. Since there 
+are 16 bytes across the screen in each row, and 8 pixels stored in each byte, 
+it is simple to find a pixel, though it may look wierd. You just multiply the 
+y axis coordinate by 16 (because there are 16 bytes in each horizontal row),  
+and divide the x axis coordinate by 8, since there are eight pixels in one 
+Byte, then add the results together to find what byte to change. If you 
+dont understand you better think about it hard, cause its the basis for the 
+entire routine.  
+ 
+To begin, you must know how to divide and multiply in binary. Since 16 and 8  
+are powers of 2, it makes it extremely simple. To multiply by a power of 2,  
+just add together your operand, for example: 
+ 
+  < 5  *  64  =  320 > so...            ||  < 4 * 16 = 64 > 
+  ld hl,5                               ||  ld a,4 
+  add hl,hl |   5*2 = 10                ||  add a,a 
+  add hl,hl |  10*2 = 20                ||  add a,a 
+  add hl,hl |  20*2 = 40                ||  add a,a 
+  add hl,hl |  40*2 = 80                ||  add a,a 
+  add hl,hl |  80*2 = 160               ||          a = 64 
+  add hl,hl | 160*2 = 320               || 
+                
+ok that is pretty obvious and simple. Now lets divide by powers of 2, not 
+that much harder. Just use the SRL command. It inserts a 0 in the bit 7 
+and shifts everything to the right, dividing by 2. If you understand this you 
+can go to the example. Otherwise, think of the number 100 in decimals. If you  
+shift it to the right one place, it is dividing by 10. 100->10. Because  
+decimals are based on 10. Binary, based on 1's and 0's, when rotated acts the  
+same as dividing by 2.  
+For example... 
+ 
+  < 16 \ 4 = 4 > 
+   ld a,16    16=%00010000 
+   srl a       8=%00001000 
+   srl a       4=%00000100 
+   a = 4  
+ 
+heres one that doesnt come out perfectly 
+ 
+  < 50 / 8 = 6 remainder 2 > 
+  ld a,50      %00110010  =50 
+  srl a  /2    %00011001  =25 
+  srl a  /4    %00001100  =12 
+  srl a  /8    %00000110  =6 
+                 a now equals 6 
+ 
+Youre probably thinking, "8 times 6 doesn't equal 50??". True, where is the  
+remainder? In the bits that were rotated out the LSB (least significant bit) 
+side of the bite. Hmm... The first time, from 50 to 25 a "0" came out, a "1" 
+the second time and a "0" the third. Well, if you mask out the last 3 bits 
+from the operand before you even start, you know the remainder! so, 
+ 
+  ld a,50        ;50 = %00110010 
+  and %00000111  ;cause you know youre dividing by 8 before you start. 
+  ld e,a         ;now E holds the remainder, in this case 2 (%010) 
+ 
+Now, If you dont understand the part before this you better test it out on  
+your own. Try it for yourself, its the best way to learn. 
+If you did understand this, then go down to to routine and see if you get it 
+yet.  
+The routine takes the Y coordinate ("C") and multiplies that by 16, since 
+every row down you jump is equal to 16 bytes. Then it takes the X coordinate 
+("B") and divides it by eight since there are eight pixels stored in each  
+byte. Then it adds the two results, which is The byte that contains your 
+desired pixel in its eight bits. Then it takes the remainder of dividing the 
+X axis number and finds the corresponding power of two, so that if it is the  
+first pixel in the byte, A will look like %10000000, if its bit 0 that has 
+the corresponding pixel it will look like %00000001, and so on. If you dont  
+quite understand this, look over the routine and/or go back and read it again. 
+ 
+<----------------------------------------------------------------------------> 
+             THE ROUTINE    by James Rubingh 
+<----------------------------------------------------------------------------> 
+ 
+Fpixel:      		;calculate the byte, and A as a power of 2 
+ ld a,b  
+ and 7 
+ ld e,a                 ;there exist a simulated 16 bit addition used in  
+ ld d,0                 ;the EBLE YOPP findpixel routine, its a few clock 
+ ld hl,offsets          ;clock cylcles faster, but not as easy to understand 
+ add hl,de              ;It is far superior though 
+ ld a,(hl) 
+ ld l,c                 ;There is another way to do this that uses the 
+ ld h,0                 ;RLD command. That command will Multiply the 
+ add hl,hl              ;byte at hl by 16 and add A to the result 
+ add hl,hl              ;all by itself. (eble yopp findpixel routine) 
+ add hl,hl 
+ add hl,hl 
+ srl b 
+ srl b 
+ srl b 
+ ld e,b 
+ ld d,0 
+ add hl,de 
+ ret 
+offsets: .db $80,$40,$20,16,%00001000,%00000100,%00000010,%00000001 
+                                         /\ 
+                                         || 
+                                         || 
+                                         All different powers of 2 
+ 
+  I would also like to point out that this code above will only find the offset 
+To the correct bit FROM 0. This means that if you want to find a bit in the 
+Graph memory, you would need to add $fc00 to the offset given by this routine. 
+To find an offset to the bit in the GRAPH_MEM, then you would just add  
+GRAPH_MEM to the offset to find a pixel in the Graph_mem. If you dont 
+understand this, then i dont think that you understand how the FIND_PIXEL  
+routine works. You can find simple examles of this in almost any game. One 
+thing to look for is that the author may use 'ld a,h  \  or $FC  \  ld h,a' 
+instead of loading $fc00 into DE and adding that to hl, it does the same thing.
+ You can see a prime example of this in the EBLE-YOPP routine.
+ 
++--------------------------------------------+ 
+|             ephesus@gmaill.com             | 
+|  http://www.wrive.com                      |
++--------------------------------------------+

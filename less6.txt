@@ -1,0 +1,120 @@
+-------------------------------------------------------------------------------
+Lesson #6:  Scrolling Images Horizontally 
+-------------------------------------------------------------------------------
+  
+-INTRODUCTION:
+ Most people making a graphical game come across the problem of scrolling things
+ sideways in a game. Scrolling vertically is very simple, since you can just copy
+ bytes higher in the Video Memory (bitmapped area at $fc00) exactly $10 bytes. 
+Since each horizontal row of pixels on the screen is 16 ($10 in hex) bytes (1 pixel
+ = 1 bit, 8 bits in a byte, and 16 bytes across the screen, making 128 pixels) so 
+moving a byte back $10 moves the pixels up on the screen one row. If you dont really 
+understand this then you might want to look at other tutorials that explain the 
+video memory a little better, and in more detail.  
+  Scrolling an image sideways however can be a little more difficult since if you 
+move a byte one byte forward or back, it will move the image on the screen 8 pixels
+ to the side, since there are 8 pixels represented in each byte.The Scrolling an 
+image to the side one pixel at a time can be acomplished using several different 
+methods.  The first method is useful if you just want to scroll a small image, maybe
+ a 8x8 bitmap up, down, left and right. 
+  You could do this using a PutSprite routine, and then storing the X and Y 
+coordinates somewhere, drawing the sprite, and then changing the X and Y coordinates,
+ and drawing the sprite again, this would give the elusion of scrolling the image. 
+This method is a little more obvious than the next technique. You would usually use
+ this method when your moving a small sprite like a space ship or something.  
+  If you wanted to scroll a background, like in side scrollers such as SQRXZ, Mario
+ or even Mega Racers on the Ti-85, you would want a faster way to do this because 
+the image your moving is much larger. It isnt very economical to redraw the sprite
+ every time, since it would be a non-aligned sprite, and non-aligned sprites are 
+drawn pixel by pixel. The faster technique of scrolling large areas is using the 
+'RL' command and scrolling the whole freaking screen.
+
+
+-STRATEGY / COMMANDS:
+  For all of you people who dont know what the 'RL' command does, here is a short
+ review of the rotating commands.  
+  
+    RL - RLA    -rotate left through carry   
+    'RL' will rotate all the bits in the operand (whatever register or address you 
+    type in) left. The carry flag will be copied into the LSB, bit 0. then bit 7 will
+    be copied into the carry flag. So...  
+  
+      %00100111                  ;carry = 0 to begin  
+      <Rotate it 'RL'>  
+      %01001110                  ;carry = 0 after rotation  
+  
+   not to difficult, heres another example  
+  
+     %00101111          ;carry IS set before the rotation  
+     <rotate it 'RL'>  
+     %01011111          ;bit 0 IS set, because the carry was put into bit 0  
+                    ;the carry is NOT set after the rotation, because bit 7 was
+                    ;rotated out into the carry flag. Since bit 7 wasnt set in 
+		    ;the first place, it  
+                       ;wont be set in the carry flag after the rotation.  
+  
+Now, that isnt too complicated, the opposite commands are RR  and RRA for rotating 
+right in the same way. There are other rotation commands (rrca,rlca,rrc,rlc) these 
+are branch rotations which mean that going INTO the rotation it doesnt place the 
+carry into the end bit, but the opposite side ending bit in. bit 7 goes into bit 0 
+if your rotating left, and vice versa. This will set and reset the carry flag as 
+well, but the carry flag is not inserted into the byte at any point like in RL,RR. 
+These however are not very good for shifting the screen to the side because you dont
+ want the end bit showing up at the other side of the byte.
+
+
+-THE ROUTINE:
+   This is the part i know you've all been waiting for... the scrolling routine. 
+It is quite simple, as it shifts a byte of the video memory, it stores the BIT that
+ is rotated out of the byte in the carry flag (bit in the flag register) and then 
+when the next byte is rotated, the carry flag is automatically inserted when a RL 
+or RR command is executed. As follows...
+
+  
+scroll: 
+  ld hl,0 
+  ld c,64 
+scroll3: 
+  ld b,4 
+  or a 
+scroll2: 
+  dec hl 
+  rl (hl) 
+  dec hl 
+  rl (hl) 
+  dec hl 
+  rl (hl) 
+  dec hl 
+  rl (hl) 
+  djnz scroll2 
+  dec c 
+  jr nz,scroll3 
+  ret 
+  
+ You shift 4 bytes 4 times (4*4=16) to shift one horizontal row. Its faster than 
+just loading b with 16 and doing a djnz because the djnz is executed less frequently.
+ I suppose you could speed it up more by just putting 16 'DEC HL \ RL (HL)' and 
+eliminating the entire inner part of the nested loop.
+ The 'OR A' is executed before the Scroll2 label to clear the carry flag so that 
+trash wont be inserted at the begginning of the row. This routine obviously shifts
+ the screen to the left one pixel (if you couldnt tell this maybe you should look 
+it over again). If you only want to shift half of the screen then you would change
+ the 'ld c,64' line to 'ld c,32'. or if you only want to shift 8 rows for some 
+cracked up reason, then you would 'ld c,9' or something.
+ So, if you would like to shift the screen right off the screen, then you would 
+execute this Scroll routine 128 times in a row. To shift the screen to the right,
+ you would change the RLs to RRs and then change the HL at the begginning to $FC00
+ (the start of the video memory) and increase the pointer every time instead of 
+decreasing it. Its basically the opposite for everything.
+ 
+ As you can see, the possibilities are very numerous to the effects that can be done 
+with this routine and similar ones. You could eliminate the 'or a' and get a sort of
+ wrapping effect... all kinds of stuff.
+ Well, this concludes the easiest of my tutorials, thanks for reading. Im sure that 
+there are errors all over the place in this lesson so feel free to email me with 
+suggestions. 
+
+James Rubingh
+ephesus@acz.org
+http://james.acz.org
+

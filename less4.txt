@@ -1,0 +1,186 @@
+--------------------------------------------------------------------------- 
+  LESSON 4: extention of lesson 3, transfering data from a ti-os variable  
+--------------------------------------------------------------------------- 
+ 
+  I didnt go into transfering the data from the external levels in the  
+past lesson, i only talked about how to find the data using the VAT. In 
+this lesson i am going to show how to move the data from the external  
+level (usually a string, but could be any variable in the ti-os). 
+   Here is a quick review of the nessesary data you should know about the 
+ti-86 memory. Maybe you've seen these character pictures about the memory  
+before. 
+   
+  0000h       ------------------------- 
+  (ASIC)     |                         | 
+             |   ROM PAGE 0            | 
+  4000h      |-------------------------| 
+             |                         | 
+             |   SWAPPED ROM PAGE(1-F) | 
+  8000h      |------------------------ | 
+             |                         | 
+             |   SWAPPED RAM PAGE (1-7)| 
+  C000h      |-------------------------| 
+             |                         | 
+             |   STATIC RAM PAGE (0)   | 
+              ------------------------- 
+                 
+What this ascii picture is showing is the 4 main sections of the ti-86 mem. 
+remember that since there is more memory than the ti-hardware can recognize 
+all memory must be swapped into the acessable area before it can be used.  
+This diagram above is a "picture" of the acessable area. 
+            
+           ABS = ABSOLUTE ADDRESS 
+   ABS             RAM PAGE    ASIC ADDR 
+   ----            --------    --------- 
+   0C000-0FFFF        0        C000-FFFF 
+   10000-13FFF        1        8000-BFFF 
+   14000-17FFF        2        8000-BFFF 
+   18000-1BFFF        3        8000-BFFF 
+   1C000-1FFFF        4        8000-BFFF 
+   20000-23FFF        5        8000-BFFF 
+   24000-27FFF        6        8000-BFFF 
+   28000-2BFFF        7        8000-BFFF 
+ 
+This table shown above is showing all the memory on the calculator. To  
+understand the table think of it this way... 
+Under the absolute (ABS) column there are 24 bit pointers to all the data 
+on the calculator. BUT.. the calculator cant process 24 bit pointers, only 
+16 bit pointers, such as HL, or BC or $9400 ect.. so the ROM solves this 
+by using the ABS address, and then when you need to actually get the data 
+from that location, you change it into an asic address (16 bit) AND a RAM 
+page. So the first column is also represented by the COMBINATION of the 
+second two columns. I hope that you understand this, $010000 (a 24 bit  
+pointer) is equal to $8000 after RAM page 1 has been swapped in. It really  
+isnt too complicated, its just saying that using the paging system of the 
+ti-86, all memory locations can be displayed as either a 24 bit pointer or 
+a RAM page - 16 bit pointer pair. 
+  Okay now the actual transfer of data from one absolute address to another  
+location. After using the rst $20, rst $10 technique of getting a  
+variable's data address (or using the VAT) you will be left with a 24 bit  
+pointer to the variable data. If you have just used rst $10 to find a  
+variable (whose name was stored in _OP 1     -Lesson3-) the 24 bit pointer  
+will be in BDE. If you used the VAT to find the pointer, then it will be  
+in what ever group of registers you want since you load from the VAT one 8  
+bit register at a time, for example AHL or BDE, howeve you chose to load  
+the ABS pointer out of the VAT (i think i used ADE in the example 
+during lesson 3).  
+   That isnt that important, what you need to know is that after you get 
+an absolute pointer to the variable data, you can transfer the data by 
+converting the ABS pointer into an asic pointer, then moving the byte you 
+want to move. Lets take a look at a short example. 
+ 
+If i wanted to move 168 bytes from my external level to the text_shadow, 
+i would go like this. First you get the absolute pointer, and store it in 
+AHL since AHL is the way the ROM stores its 24 bit pointers. If you just 
+used the rst $10 to get an absolute pointer then the pointer will be in 
+BDE. So to transfer BDE into AHL (not the byte pointed to by them, but the 
+actual pointers) then you would do this: 
+ 
+  ld a,b        ;right? not too complicated, just swapping BDE and AHL 
+  ex de,hl      ;switches the contents of de and hl 
+                ;now AHL equals the 24 bit pointer 
+ 
+Move_data: 
+  ld b,168      ;load into b how many bytes you want to move 
+  ld de,_textShadow  ;pointer to where ya want to store the data 
+Move: 
+  ld c,a         ;AHL=pointer save AHL so we can use it later 
+  push hl  
+  call GETB_AHL  ;$46c3 ROM call: returns the byte at ahl in A register 
+  ld (de),a      ;just copied it from (AHL) to (DE) 
+  pop hl         ;restore the absolute pointer from before 
+  ld a,c         ;restore "    "        "        "    " 
+  call INC_AHL   ;$4637 ROM call: returns AHL=AHL+1 (the next byte) 
+  inc de         ;increase the destination pointer by one 
+  djnz Move      ;(dec b, compare it to zero, if not zero go to Move)  
+  ret 
+ 
+Now after this code is in your source, just do a "call Move_data" and it 
+will transfer 168 bytes from (AHL) to the textShadow. If your ABS pointer  
+was in BDE, make sure to put BDE in AHL, because the routine gets the byte 
+at AHL, not the byte at BDE. Remember to save your absolute pointer because  
+GETB_AHL will return in HL, an asic pointer to the data (16 bit).  
+  I just Got an idea, lets do it backwards really quick. Lets say that i  
+want to do a highscore in a game. Here is how to do it: 
+ First, instead of using the TextShadow to store you variable during the  
+game, define a specific word IN your source code to store your High score 
+in. This is done because the TextShadow will be overwritten, but if you  
+store the number in your program, then it will always be with your program. 
+-------------------------------------------------------------------------- 
+  
+ .include ASM86.h    
+ .includ ti86asm.inc 
+  .org _asm_exec_ram 
+ 
+Score = _textShadow           
+ 
+     
+    ;game is up here 
+ 
+  call SaveScore 
+  ret   ;go back to whatever called the program 
+ 
+ 
+      ;this will first save the Score (textshadow) to HighScore (.dw 0) 
+      ;then save that to the program data using ABS addressing 
+ 
+SaveScore: 
+  ld hl,(Score)         ;save the Score in the High Score 
+  ld (HighScore),hl      
+  ld hl,ProgName 
+  rst $20               ;copy the title of the game into OP1 
+  rst $10               ;Search the Vat for this title 
+  ;after this command BDE equals the 24 bit pointer to the data 
+  ex de,hl              ;load into AHL, BDE 
+  ld a,b 
+  ld de,HighScore-_asm_exec_ram+4  ;offset of where to start to store 
+  add hl,de             ;find where to start to store  
+  adc a,0               ;added de to AHL   AHL=AHL+DE 
+  ld b,2 
+Saveit: 
+  ld c,a                ;save AHL 
+  push hl 
+  call GETB_AHL        ;converts AHL to asic, (swaps in the correct page) 
+  ld a,(de)            ;take the byte from HicgScore 
+  ld (hl),a            ;Store it into the Program Data  
+  pop hl               ;restore AHL 
+  ld a,c 
+  call INC_AHL          ;increase the destination pointer 
+  inc de                ;increase the source pointer 
+  djnz Saveit 
+  ret 
+ 
+HighScore: 
+   .dw 0        ;word where we will store the High Score 
+ProgName: 
+  .db $12,X,Name  ;X=length of the name of the program, Name=Title of VAR  
+                   ;for example .db $12,5,James    if my PRGM was James 
+                   ;also remember this is Case sensative, watch caps! 
+.end 
+-------------------------------------------------------------------------- 
+ 
+ Notice that when an assembly game is run, it is copied to the 
+_asm_exec_ram location and then executed. So if we would just save the  
+score in (HighScore), it would really be changing the byte relative to 
+_asm_exec_ram, so the next time the game was run, it would load the  
+initial program into the _asm_exec_ram thus overwriting the changes we 
+made before. So we rewrite it to the program data which is the code that 
+gets moved to the _asm_exec_ram area before execution, thus a permanent 
+variable. wait im not done yet... since some shells will copy the program 
+from the _asm_exec_ram BACK to where it was taken from, we have to copy  
+the high score to both the _asm area, and the Program data, which is what 
+the code above does. (I know that AShell the old version does this, and if 
+you have ever played Insane game on AShell the old version, the high score 
+doesnt work because he only saved it to the program data, not knowing that 
+AShell would copy the _asm_exec_ram area back to the Program Data.) 
+Wheew!! that was confusing as hell! well, read it over and over if you cant 
+quite get it. Its not to complicated, just hard to explain to other people. 
+ 
+Thanks for reading this and hope it helps you out. please report any 
+errors to me! by the way i didnt test any of this code out, i'll do it  
+later. But it should work. If it doesnt work EMAIL ME!! 
+ 
++-------------------------------------------------------------------------+ 
+| James Rubingh                                                           | 
+| http://www.wrive.com                             ephesus@gmail.com      | 
++-------------------------------------------------------------------------+
