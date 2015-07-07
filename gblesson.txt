@@ -1,0 +1,321 @@
+--------------
+GameBoy programming lesson #1
+by James Rubingh
+http://www.wrive.com
+--------------
+
+  Before you read my entire tutorial, please make sure that you have a 
+few things on your freaking computer. You need to have these items:
+
+  - TASM compiler 	http://www.ticalc.org/pub/dos/asm/tasm.zip
+	this is a table driven assembler. It will assemble your source code
+
+  - tasm69.tab		http://james.acz.org/ti86/tasm69.tab
+	this is the table that tasm will use to compile gameboy stuff. It
+	has all of the opcodes inside it if you want to look too.
+
+  - An emulator 	http://www.work.de/nocash
+	preferably no$gmb. It runs on almost any computer and it
+	does fabulous emulation.
+
+  - GB97		http://members.tripod.com/~jaymzroo/gb/gameboy.zip
+	This emulator is for normal gameboy game emulation. It's a Dos 
+	program but i like it quite a bit. 
+
+  - c.bat		http://james.acz.org/ti86/c.bat
+	This batch file will help you compile quickly and reletively
+	painlessly. Just type the main name of your source code, the
+	extension .asm is added and it will compile.
+
+  - The Pan Doc		http://james.acz.org/ti86/pandoc.txt
+	This is a document, with ALL the information about the inner
+	workings of the GameBoy. Please read this before you read MY
+	tutorials.
+
+
+-------
+Begin Tutorial!
+
+  Welcome, this tutorial is meant to help people learn how to program the 
+nintendo Gameboy gamimg system. Knowledge of z80 assembly is required. If 
+you're not familiar with z80 assembly language then you will be in trouble.
+The gameboy uses an altered z80 processor, so assembly language for both is
+very similar, and the specifications about the actual processor is beyond
+the scope of this tutorial. I would like to say though, i personally do NOT 
+consider the gameboy's processor a z80. I am one of a rare and dying breed
+of calc programmer that do not consider it a z80 :) With SO many differences
+i wouldn't consider it a z80, i mean the thing doesn't even have shadow 
+registers or IX or IY, hence NOT a z80. 
+  Anyways, now to get started, all you're source code will be typed in NotePad or 
+other capable text editor, and saved with the extension ".asm". It really
+doesn't need that extension, but you would have to edit the .bat file 
+according to which extension that you choose to use. 
+  The first thing that i'm going to talk about is the difference between
+other z80 assembly, and gameboy assembly. I'll compare to the ti-86 since
+most of my visitors will probably be ti-86 programmers. I'll use the pan 
+document extensively, so i hope that you looked it over :)
+---
+Compared to the Z80, some instructions have been added and some have been
+taken away.
+
+ The following are added instructions:
+
+  ADD  SP,nn             ;nn = signed byte
+  LDI  (HL),A            ;Write A to (HL) and increment HL
+  LDD  (HL),A            ;Write A to (HL) and decrement HL
+  LDI  A,(HL)            ;Write (HL) to A and increment HL
+  LDD  A,(HL)            ;Write (HL) to A and decrement HL
+  LD  A,($FF00+nn)
+  LD  A,($FF00+C)
+  LD  ($FF00+nn),A
+  LD  ($FF00+C),A
+  LD  (nnnn),SP
+  LD  HL,(SP+nn)         ;nn = signed byte
+  STOP                   ;?
+  SWAP r                 ;Rotate register r by 4 bits
+
+ The following instructions have been removed:
+
+  Any command that uses the IX or IY registers.
+  All IN/OUT instructions.
+  All exchange instructions.
+  All commands prefixed by ED (except remapped RETI).
+  All conditional jumps/calls/rets on parity/overflow and sign flag.
+---
+That was an excerpt from the pan document. It shows the differences between
+the processor that the ti-86 uses, and the processor on the gameboy. Some 
+of the most notable differences are the "swap r" instruction, and the ldi, 
+ldd, and ldh instructions. The swap r command will just switch the first 4 
+bits in the specified byte with the second 4 bits. Ldi, and ldd are two
+very useful instructions that i wish were on the ti-86. It will do the 
+specified instruction as if it were doing normal indirect memory addressing,
+but then it will automatically increase the pointer (16 bit register pair 
+that is pointing to the target, or source, memory area). example:
+
+ld hl,$c000
+sub a			;ld a,0
+ldi (hl),a
+
+After those 3 instructions are executed, HL now points to $c001 ! This can 
+be utilized in loops with amazing ease. example:
+
+  ld bc,$300
+_ldir:
+ ldi a,(de)
+ ldi (hl),a
+ dec bc
+ ld a,b
+ or c
+ jr nz,_ldir
+
+This simple routine simulates the LDIR instruction on other z80 processors.
+But get a load of this... there is NO ldir command on the gameboy. The ldir 
+command does NOT exist. This little routine above has more significance now 
+since it takes place of the ldir instruction on the other z80s.
+
+There is a lot of stuff in the Pan Document that needs no explanation. Read
+through it and you could learn some very important stuff. I'm going to skip 
+to doing simple graphics. The graphics on the gameboy are also explained in
+the Pan Document, but i'm also going to go over some of the details with you
+for this first lesson.
+
+The first project that we are going to tackle is going to be putting an 8x8
+square on the background of the screen. To do this, you have to 1) set up the
+gameboy palette 2) set up the background x and y 3) load the tile 4) tell
+the gameboy to take from that tile location and write to the screen.
+
+1) The gameboy screen displays 4 shades. white, light gray, dark gray, and 
+black. These 4 colors are represented by 2 bits. The default (the way people
+normally picture it) is to have %00 be white, %01 be light gray, %10 be dark
+gray, and %11 be black. This makes sense, the higher the number (in binary) 
+the darker the screen. So to set this up in your program, you need to load
+the information into the BGP register. This is a register located at $FF47
+which controls the color representation of pixels. The high 2 bits in the 
+register represent what will be displayed as black, and the next 2 bits are
+dark gray, and so on. So to set the palette to default, load into $FF47, 
+%11100100 . If you look closely, you will notice, the low 2 bits are 00 for
+white, the next is 01 for light gray, 10 for dark gray, and 11 for black.
+As you may have guessed, if you put 00 for the high 2 bits, it will show on
+the screen as white, so if you load into a %00100100 there will be NO black
+colors on the gameboy screen. To load the default colors for the background
+do these 2 commands.
+
+  ld a,%11100100
+  ld ($FF47),a
+
+2) The next thing that you need to do is set up the background X and Y
+coordinates for how they will appear on the screen. I'm assuming that you
+have already read the Pan Doc information on the Background memory, so you
+know this:
+----
+ The main GameBoy screen buffer (background) consists
+ of 256x256 pixels or 32x32 tiles (8x8 pixels each). Only
+ 160x144 pixels can be displayed on the screen. Registers
+ SCROLLX and SCROLLY hold the coordinates of background to
+ be displayed in the left upper corner of the screen.
+ Background wraps around the screen (i.e. when part of it
+ goes off the screen, it appears on the opposite side.)
+----
+ What this means is that the video memory accounts for more space than
+can be shown on the lcd at one time, so you can move the window around
+the video memory to change which part of it you see. This is done using
+the registers at $FF42 (scrollY) and $FF43 (scrollX). To have the top 
+left corner of the lcd show the top left corner of the video memory, set
+$FF42 and $FF43 to 0. **more information on this concept at part 4**
+
+3) Next you need to store the bitmap that you drew to the tile data
+table. This is a memory area, where every 16 bytes is considered a tile.
+If you tell the display driver to draw tile #4, it will multiply 4 by 16
+and add that to the start of the tile data table to get the location of 
+tile number 3. The location of this table is not static, it can be 
+switched by the user between 2 different memory locations. Let's look at 
+the pan document documentation of this phenomenon.
+---
+Tile patterns are taken from the
+ Tile Data Table located either at $8000-8FFF or
+ $8800-97FF. In the first case, patterns are numbered with
+ unsigned numbers from 0 to 255 (i.e. pattern #0 lies at
+ address $8000). In the second case, patterns have signed
+ numbers from -128 to 127 (i.e. pattern #0 lies at address
+ $9000). The Tile Data Table address for the background
+ can be selected via LCDC register.
+---
+  You should note the way that the tiles are numbered, it's signed if
+you're using the second method, which means that the first tile stored
+at the tile data table will be numbered -127, but if you use the second
+table location, then the first tile is numbered 0. This is important, 
+if you forget, you may tell it to get tile 0 when in fact you meant
+tile -127, or vice versa.
+  So back to the problem, if you want to display our tile, we set the
+table location that we want using the LCDC register ($FF40). Bit 4 of 
+the lcdc register signifies which of the 2 locations you want the tile
+data table, if it's set (1), then it will be located at $8000 (the 
+easiest of the two in my opinion, because then the tiles are numbered
+0-255 rather than -127 to 128). If bit 4 is reset (0), then it will be
+located at $8800. 
+
+4) The last step is to set up how the background will display all the 
+tiles onto the screen. The way that the gameboy displays things on the 
+screen (at least on the background) is by taking a number, which is
+stored in one byte, and take the tile data from the tile data table
+which has that number, and display it to the screen in sequence from
+left to right, then down a row and so on. This is explained already in
+the Pan Document that you should have read by now... 
+  So, if you have 8x8 areas on your background that are the same, you
+could use the same tile data in 2 different spots on the screen, that 
+saves a little bit of memory. So, since we want to display our single 
+tile in the top left corner of the screen, we'll store a 0 in the first
+tile map spot. The Tile map is also located in 1 of 2 places just like
+the tile data table is. You choose the location using the lcdc register
+just like with the tile data table. Bit 3 designates which address the
+table will start at. 
+----
+ Bit 3 - BG Tile Map Display Select
+                      0: $9800-$9BFF
+                      1: $9C00-$9FFF
+---
+ If the bit is reset, then the tile map area starts at $9800, if it's 
+set then it will start at $9c00. Also you should note, The tile map
+area is 32 bytes wide, even though the lcd screen only shows 20 tiles
+wide. Which means that the last 12 tiles to the far right will not 
+show on the lcd if you have the background aligned at 0,0. If you
+don't quite get what i mean, i'm saying if you want to change the first
+tile on the upper left, it's location is tilemaptable+0. If you want 
+the tile directly BELOW it on the screen, it's location is 
+tiledatatable+32! not tiledatatable+20. Anyways, after this is done,
+your tilebitmap should be displayed on the screen in the top left 
+corner, AND anywhere else where the tile map data said the number of
+your tile. (which in this case was 0). If you want to make sure that
+ONLY your tile shows, store a blank tile in the first tiledata spot, 
+then store your tile you want to display in tile data spot 1, then 
+load all zeros into the tilemap table, and a 1 where ever you want your
+tile to show up. That way you will be telling it to display tile 0 all
+over the screen (tile 0 is all off pixels).
+
+Okay, here is some sample source code that will do exactly what i just
+explained in the tutorial above. On the emulator that i used to test it
+it presets the tilemap table to all 0's, and since I load my tile bitmap
+to spot 0, it displays ALL over the screen. but it still works....
+
+.include gameboy.inc	;get that from my site
+
+.org $150
+_main:
+
+  di
+  ld a,0
+  ld ($FF40),a		;lcdc
+
+  ld a,%11100100	;set palette to normal
+  ld ($FF47),a
+
+  ld a,0
+  ld ($FF42),a		;set the scrollx and scrolly
+  ld ($FF43),a
+
+  ld hl,tiledata
+  ld de,$8000
+  ld bc,16
+  call _ldir		;defined lower in the source..
+
+  ld hl,tilemap		;tile map
+  ld de,$9800
+  ld bc,1			;just one byte
+  call _ldir
+
+  ld a,%10010001
+  ldh (lcdc),a		;turn the screen on, with the background
+
+main_:
+	jp main_		;neverending loop
+
+
+_ldir:			;there is no ldir command on the gameboy
+ ldi a,(hl)		;ldi means load and then increase HL
+ ld (de),a
+ inc de
+ dec bc
+ ld a,c
+ or b
+ jr nz,_ldir
+ ret
+
+tilemap:
+ .db 0
+
+tiledata:
+ .db %00111110
+ .db %00001000
+ .db %00000000
+ .db %00001000
+ .db %00001000
+ .db %00111111
+ .db %01000001
+ .db %01000001
+ .db %00000001
+ .db %01000001
+ .db %00000001
+ .db %01000001
+ .db %01000001
+ .db %01000001
+ .db %01111111
+ .db %00000000
+
+.end
+
+
+Well, compile that source code, and see if you can get it to work. If you
+CAN, then screw around and try to get ONLY my sprite to show up, or try
+changing the palette, but over all, have fun :) Please note, if it doesn't
+work, it could be that i didn't wait until the vblank period to load the
+tiles and video memory stuff. But we'll save that for a different tutorial,
+if i ever write one...
+
+Suggestions for the next tutorial, flames, or credit card numbers can be
+sent to ephesus@gmail.com.  The latest updates will always be at my webpage
+http://www.wrive.com
+--------------------------------
+*James Rubingh
+ephesus@gmail.com
+http://www.wrive.com
+--------------------------------
