@@ -1,0 +1,735 @@
+   ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+   ³               Matt Johnson's Z80 Programming Tutorial             ³
+   ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+             ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+             ³      Programming the TI-86 ³  PART 03       ³
+             ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+  ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+  ³ The Z80 / Memory / Tasm / Registers / Flags / Z80 basics / Rom Calls ³
+  ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+ This tutorial is best viewed using DOS EDIT. This is because I use
+Extended ASCII characters which clarify the tutorials a lot. These
+tutorials do not look correctly under windows, so just open a Dos
+Window.
+
+        If you catch any mistakes or have any
+                additions, comments, anything, e-mail me immediately!
+
+My e-mail address is Matt514@gte.net
+My Home Page is at http://home1.gte.net/matt514/matt.htm
+My TI-86 Web Page is at http://www.dogtech.com/cybop/ti86/
+
+    ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ  Introduction ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ
+
+ This tutorial is going to be long. It also it going to cover a lot of
+material, so be prepared! Some of the things covered in this tutorial
+will be the general makeup of the Z80, how programs are assembled,
+how programs are run, the table assembler, Tasm directives, registers,
+z80 information, simple z80 instructions, how rom calls work, and how
+memory works, and whatever else I think is important to know. Oh, and,
+not neccessarly in that order, either.
+
+    ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ  Mr. Z80 ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ
+
+ The processor used in the TI-86 is a Z80. This CPU is made by Zilog.
+The TI-86 uses a 6 MHZ CPU, meaning that the CPU "cycles" six million
+times a second. The "clock" that controls the speed is determined by
+a crystal. The CPU can only "do something" during this clock cycle.
+If you are serious about learning everything about the Z80, visit
+their site at www.zilog.com and order free Z80 books. The full link
+is at my web page.
+
+
+
+        ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ  Table Assembler ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ 
+
+ I think it may be best to explain some of the directives and macros used
+in TASM, the Table Assembler.
+
+                        ÄÄÄÄÄÄ Comments  ÄÄÄÄÄÄ
+
+            Comments in source code start with a semicolon ;
+
+
+ Alias
+ -----
+
+ TASM allows you to have words represent numbers. This is called aliases.
+ For example, the alias _asm_exec_ram is $D748. This alias and hundreds
+ more are stored in the file ti86asm.inc . To define an Alias, have
+ the alias on the left, EQU or = in the middle, and the number on the
+ right. Example:
+
+  Optic EQU $1234
+
+  Whenever you use Optic, the TASM compiler replaces it with $1234
+
+ Include
+ -------
+
+ #include "ti86asm.inc"
+
+  The INCLUDE directive reads in and assembles the indicated  source
+  file. In this case the include file is just a list of aliases that
+  same programmers time and headaches, and, most of all: suicidal
+  tendencies!
+
+
+ Labels
+ ------
+
+ Labels are basically words that represent an address in an assembly
+language program. Labels can be used to mark places in a program like
+line numbers did in BASIC. It can also be used to signify the start
+of something, like the start of a string. A label starts with either
+a letter or an _ (underscore). A label ends when a space or colon is
+encountered.
+
+Simply add a colon or space after a word and it is a label.
+
+Example
+
+Hello:
+
+Hello is now a label. Wherever hello is seen it is replaced by the
+16-bit address where hello is.
+
+If the hello label was the start of
+an assembly program, then when LD HL, Hello was executed,
+then HL now contains the address of Hello, which is $D748 (I believe
+this is correct). Note: $D748 is the start of all assembly language
+programs on the TI-86. More on this later.
+
+The directive .db defines a byte:
+
+Example
+
+.db $40
+
+The number $40 has been produced on the spot.
+
+.db "Hello World"
+
+An 11 byte string has been created.
+
+.db "Holy Cow", 0
+
+an 8 byte string has been created and ended with byte 0 (NULL)
+
+Add a label and you know where the number 40 is:
+
+My_number:
+.db $40
+
+The byte at address My_number is $40.
+Then you can change the byte if you would like
+
+LD HL, My_number
+LD (HL), $60
+
+The byte has been changed from $40 to $60.
+
+The directive .db defines a byte (8-bit):
+The directive .dw defines a word (16-bit):
+
+
+The .ORG directive tells the compiler where to start compiling the
+programs at. For example, .ORG $D748 tells the compiler to start
+the source code to be compiled at $D748 (the start of all ti-86 asm
+programs, alias _asm_exec_ram).
+
+The .END directive tells the compiler the assembly program is
+finished.
+
+
+     ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ  Memory ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ
+
+ It is helpful to know how memory works on the TI-86. This is still
+a mildly sketchy topic, so if you have any corrections or additions,
+please e-mail me!
+
+ If you do not understand this at first, then skip this section
+and re-read it later on. The "jargon" is intermixed through these
+sections, there is no perfect order to present this information to
+you.
+
+ The memory of the TI-86 is made up of 256K of ROM and 128K of RAM.
+ROM stands for Read Only Memory, and it is permanent, it can not
+be erased. RAM means Random Access Memory, which can be written
+to and erased freely. A little backup battery keeps the RAM from
+getting erased when you turn off your calculator or change the
+AAA batteries.
+
+ The Z80 processor can only access 16-bits of memory at a time. This
+is even worse then the 20-bit (1 MEG) limit on the XT. 
+
+2 ^ 16 = 65,535 bytes, which is the maximum addressable memory on
+the TI-86.
+
+
+ The TI-86 takes care of this memory limit by a paging system. This
+is a similar method used in expanded memory. The TI-86 divides the
+memory into four 16K pages:
+
+  0000h       -------------------------
+             |                         |
+             |   ROM PAGE 0            |
+             |                         |
+  4000h      |-------------------------|
+             |                         |
+             |   SWAPPED ROM PAGE(1-F) |
+             |                         |
+  8000h      |------------------------ |
+             |                         |
+             |   SWAPPED RAM PAGE (1-7)|
+             |                         |
+  C000h      |-------------------------|
+             |                         |
+             |   STATIC RAM PAGE (0)   |
+             |                         |
+  FFFFh       -------------------------
+
+
+ The first 16K, which is from 0000h to 3FFFh, is ROM PAGE 0. This
+page is permanent. It contains fequently used routines. 
+
+ The memory area from 4000h to 7FFFh is where the ROM page is swapped in.
+Remember, there are 15 pages that can be swapped into this area. The
+first ROM page (ROM PAGE 0) is permanently at 0000-3FFF, and the next
+15 are swappable here at 4000 to 7FFFh.
+
+ The second rom page (ROM PAGE 1) is the default ROM page swapped "in"
+at 4000h.
+
+ Rom Page 1 is special. This is the location of the "call table".
+Now what is special about the call table is that when you call a routine
+(assuming you are at rom page 1, which it starts out at), such as _puts,
+then it calls address $4A37. $4A37 then changes the ROM page, calls the
+routine which is in another section of the ROM, and switches you back
+to the original rom page.
+
+ This saves you the trouble of having to worry about switching ROM
+pages all the time. There are at least 1500 ROM calls present in this
+"call table".
+
+ Also, if you do not use the "call table", then you are at risk with
+incompatibility between ROM versions. As Texas Instruments changes the
+ROM (for additions, corrections, ect), then the location of the ROM
+routines may change. But the location of the routines in the call
+table stays the same. So it is best to use the routines available
+in the call table for maximum compatibility.
+
+ The memory area from 8000h to BFFFh is where the RAM page is swappped in.
+There are 7 pages of RAM that can be swapped in here. The second Ram page,
+(Ram Page 1) contains stacks and (executing ram?). The 3rd - 8th Ram pages
+contains user memory, temporary memory, temporary symbol, and user symbol
+able.
+
+ The first RAM page (RAM PAGE 0) is a permanent RAM page. This page
+is located between C000h and FFFFh. This page contains the system memory,
+cache, and the assembly program, which is stored at $D748, and there is
+about 10K allocated for this. Then the display memory, which is $300
+bytes or 1024 bytes, is located here at $FC00 and ends at $FFFF.
+
+
+ That's not all!
+
+ By calling ports, RAM pages can be loaded where ROM pages are usually
+swapped, and ROM pages can be loaded where RAM pages are usually swapped.
+This may be discussed in detail when I learn more about it.
+
+ Also, you can use 24-bit absoulute addressing to access any RAM or ROM
+page and without worrying about swapping RAM and ROM pages. This may
+be discussed in detail when I learn more about it.
+
+     ÄÄÄÄÄÄÄÄ   How asm programs are run on the TI-86   ÄÄÄÄÄÄÄÄÄ
+
+ When you run an assembly program or a call is made to an assembly
+program, the object code is copied to memory location $D748. Then
+a call is made to $D748, and then the program gets executed there.
+The program stops executing when the final "ret" opcode has been
+processed. It then returns to the calling program.
+
+           ÄÄÄÄÄÄÄÄ   How programs are assembled   ÄÄÄÄÄÄÄÄÄ
+
+ Every instruction on the Z80, and every other CPU for that matter,
+is really a binary number. An assembler takes all the instructions
+like ld, and all the extra data like strings, and converts them
+into binary called Object code. Object code is all the instructions
+and extra data converted into binary. Each instruction can be grouped
+into two hex digits, since two hex digits is a byte. Extra data like
+registers and and immediate values may make instructions longer.
+
+ You can actually type in assembly programs by hex code on the TI-86.
+You would be a fool to do so, however! That is the good think of the
+asm86 and tasm compiler!
+ 
+
+                    ÄÄÄÄÄÄÄÄ   Registers   ÄÄÄÄÄÄÄÄÄ
+
+ The Z80 central processing unit contains extremely fast static memory
+called registers. Registers are used to store numbers.
+
+ The Z80 contains 7 general purpose
+                   8-bit registers:  A, B, C, D, E, H, L
+
+ These are shadowed as A', B', C', D', E', H', L'
+
+ You can combine two 8-bit registers to form a 16-bit register.
+ 
+ The Z80 contains 3 general purpose
+                   16-bit registers: BC, DE, HL
+
+ AF is also a 16-bit register, used for pushing or popping.
+ PC (16-bit) points at the currently executing assembly instruction.
+ SP (16-bit) points at the location of the stack memory.
+ IX and IY are indexed registers. IY holds the start of the bit table.
+
+ I and R are the Interrupt Page Address Register and the Memory Refresh
+   Register, respectfully. These are rarely used.
+
+ F is an 8-bit flag register, shadowed as F'
+
+
+The registers in detail:
+
+ A - Register A (the accumalator), is often used as a "default"
+     register in many instructions, such as logical instructions.
+
+ B, C, D, E can all hold general 8-bit values.
+
+ HL - HL can hold a 16-bit value. It also can be used as a pointer to
+      a 16-bit address.
+
+ H, L can hold general 8-bit values.
+
+ AF is a 16-bit register that holds the accumalator and the Flag
+    register. It can be pushed or popped.
+
+ PC - The program counter points to the current instruction being
+      fetched from memory. This register gets changed when you 
+      use the call or rst instruction.
+
+ SP - Stack Pointer - The stack pointer holds the 16-bit address
+      of the current top of a stack located in the RAM. The
+      external stack has a LIFO (Last In First Out) structure.
+      You can PUSH data onto the stack or POP data off the
+      stack.
+
+ IX and IY - These two index registers hold a 16-bit base address
+             that is used in what is called "indexed addressing mode".
+             The register is used to point to a place in memory and
+             an additional byte is used as a displacement. Using IX
+             or IY adds one byte to the instruction.
+
+             IY starts out at what is the location of the "bit table"
+             This is where you can access properties of the calculator
+             by changing bits of bytes relative to IY. This will be
+             explained in more detail in later tutorials.
+
+ F is the Flag register. The flag register supplies information
+   regarding the status of the Z80 and/or the instruction that
+   has just been executed. The bit positions for each flag is
+   shown below:
+
+     7   6   5   4   3    2    1   0
+   -----------------------------------
+   | S | Z | X | N | X | P/V | N | C |
+   -----------------------------------
+
+   Bits 3 and 5 are not used.
+   Four of the bits (C, P/V, Z, S) are use for conditional jump,
+     call, and return statements.
+   H and Z are used for BCD math and are not testable.
+
+   The most important flags are the Carry Flag (C) and the Zero Flag (Z)
+
+   Carry Flag:
+
+     The carry bit is set or reset depending on the operation being
+     performed.
+
+     For ADD instructions that generate a carry (overflow), and subtract
+      instruction that generate a borrow, the Carry Flag is set to 1.
+
+     For ADD instructions that do not generate a carry, and subtract
+      instructions that don't generate a borrow, the Carry flag is
+       reset to 0.
+
+      For logical instructions AND s, OR s, and XOR s, the Carry flag
+     gets reset. OR A is commonly used to reset the Carry without
+     affecting anything.
+
+      The instruction SCF sets the carry flag, and CCF changes to
+       carry flag (if C=0 then C=1, if C=1 then C=0)
+
+   Zero Flag:
+
+     The Zero Flag (Z) is set or reset if the result generated by
+      the execution of an instruction is, well... 0.
+
+     For 8-bit math and logical operations, the Z flag will be set
+     to 1 if the accumulator (a) register becomes 0. If the A
+     register is not 0, then the Z flag becomes 0.
+
+
+
+                 ÄÄÄÄÄÄÄÄ  Basic Z80 instructions   ÄÄÄÄÄÄÄÄÄ
+
+ LD
+----
+
+ LD is the most important and most frequently used instruction in
+  Z80 programming. LD means "Load". For example, ld a, 23 stores
+  23 into the A register. The syntax is:
+
+ Syntax:
+ -------
+ LD destination, source
+  
+
+ Examples
+ --------
+
+ ld a, 15                       ; stores 15 into a
+ ld bc, $1234                   ;     stores $12 into C
+                                ; and stores $34 into B
+ ld ($C00F), $0513              ;     Stores $13 into $C00F
+                                ; and Stores $05 into $C010
+ ld a, (BC)                     ; stores byte at address BC into a
+ ld (HL), e                     ; stores reg. e in byte at address HL
+ 
+
+One way to use LD is to load an immediate (specific) value into
+ a register. Example: LD B, 15
+
+We can also load a hex number or binary number into a register,
+ same deal. Example: LD C, $20 or LD D, %10110110
+
+We can load register to register:
+ LD a, b .... LD c,d ... LD e, a
+
+LD can also be used to load a byte from a memory address to a register.
+This is done by preceding the value with (). For example,
+
+ LD a, ($C37D) will load the byte at address $C37D into register A.
+
+ LD a, (BE) loads register A with the byte at address BE. If BE contained
+            $C37D, then it would be the same as LD a, ($CD7D)
+
+ LD (HL), c stores register C at address HL. If HL was $CD7D, and C
+            was 10, then it would be the same as LD ($CD7D), 10
+            and the byte at $C37D would then become 10.
+
+ LD HL, 150 stores the value 150 into the 16-bit register HL
+
+The next section explains the limitations of this newly found power!
+  
+  ÄÄÄ Restrictions and Notes on LD & Addressing (hex, LSB, MSB, etc) ÄÄ
+
+
+ When storing 16-bit values (words), the Least Significant Byte (LSB)
+  is stored first and the Most Significant Byte (MSB) is stored last.
+ This appears to make 16-bit LD's look backwards. For example,
+
+ LD BC, $569A ; puts $56 into C and $9A into B.
+
+ When using 16-bit values in addressing, the LSB is stored first, and
+ the MSB is stored in the next byte. For example,
+
+ LD ($C00F), $1510 ; stores $10 at address $C00F and $15 at address $C010
+
+ LD restrictions
+ ---------------
+
+1.) You are not allowed to store 16-bit registers into 8-bit registers,
+     and vise-versa.
+
+2.) You can not load a 16-bit register into another 16-bit register. You
+     must instead use two 8-bit lds. For example, you cannot LD BC, DE
+     you must instead do: ld b,d and ld c, e.
+
+3.) When you are using (BC) or (DE) as pointers to a byte at a 16-bit
+     address, the other operator must be register A.
+
+4.) When you are using a direct memory allocation such as ($C010),
+     the other operator must be A or a 16-bit register.
+
+5.) When using (HL), the other operator may not be a 16-bit register.
+
+
+ Check out Z80TIME.TXT for a list of all opcodes, the clock cycles,
+ and the bytes they take up. Great reference
+
+
+              ÄÄÄÄÄÄ Other important Z80 instructions  ÄÄÄÄÄÄ
+
+ These instructions are also important, you should know them.
+
+INC & DEC
+---------
+
+ INC adds 1 to a number.
+
+  Example:  INC a  ; a = a + 1
+
+ DEC subtacts 1 from a number
+
+  Example: DEC a   ; a = a - 1
+
+
+ADD
+---
+
+ 8-bit
+ -----
+
+  For 8-bit addition, the first argument (parameter, operator, whatever!)
+   must be the 8-bit register A. The result is stored in 8-bit register A.
+
+  Example:  add a, 7  ; a = a + 7
+            add a, 69 ; a = a + 69 .. uhh..
+            add a, (hl) ; adds a to the byte value at address HL.
+ 16-bit
+ ------
+
+  For 16-bit addition, the first argument must be 16-bit register HL. The
+  result is stored in 16-bit register HL.
+
+  add hl, hl  ; hl = hl + hl (hl=hl*2)
+  add hl, bc  ; hl = hl + bc
+  add hl, 911 ; hmm
+
+
+SUB
+---
+
+ 8-bit
+ -----
+
+  The SUB opcode subracts an 8-bit register or a byte to the register A.
+  You only have one argument.
+
+  sub c ; a = a - c
+
+ADC
+---
+
+ 8-bit
+ -----
+
+ Adds a number, register, (HL), (IX+d), or (IY+d) and the Carry Flag
+   and stores the result to the A register.
+
+ Example:  ADC A, (HL)  
+
+ 16-bit
+ ------
+
+ Adds a 16-bit register (BC, DE, HL, SP) with HL and adds the carry
+ flag and stores it into HL.
+
+ Example: ADC HL, BC
+
+ We can use ADC to add numbers of any size, 16-bits, 32-bits, does not
+matter. 16-bit ADC adds two numbers together and leaves the result
+into HL. If there was an overflow, a carry results and can be added
+to the next number.
+
+
+SBC
+---
+
+ 8-bit
+ -----
+
+ Subtracts a register, number, (HL), (IX+d), or (IY+d) and
+subtracts the carry flag. This is all subtracted FROM A and stores
+the answer into register A.
+
+ Example: SBC A, (HL)
+ 
+16-bit
+------
+
+ Subtracts a 16-bit register (BC, DE, HL, or SP) and subtracts the
+carry flag. This is all subtracted from HL and the answer is stored
+into HL.
+
+ Example: SBC HL, DE
+
+This is useful for subtracting 16-bit numbers. Simply make sure the
+carry flag is clear (C=0), or else the Carry flag will also be
+subtracted. You can clear the carry flag by OR A. Remember, logical
+operators RESET the carry flag and OR a does not affect the A register.
+So to subtract DE from HL, do:
+
+OR A           ; Clear Carry Flag
+SBC HL, DE     ; Successful 16-bit subtraction
+
+
+                        ÄÄÄÄÄÄ Jumps and Calls  ÄÄÄÄÄÄ
+
+ The Z80 lets you "jump" to any address you wish. Normally when
+an assembly program is executing once one instruction has been
+completely executing, the PC counter is incremented and the next
+instruction is executed. However jump instructions lets you
+go to any memory address you like and start.
+
+ There are two jump instructions: jr and jp.
+
+  Jr means jump relative. It is shorter and faster but only allows you
+to jump 129 bytes forward or 126 bytes backward. In most cases that is
+all you need. It is best to use jr when all possible..
+
+  Jp means jump absolute. It will jump anywhere, no limitation. This
+is not as efficient as jr.
+
+You can also jump on conditions. The most common conditions that you
+will need are these four: nz (not zero), z (zero), nc (not carry), and
+c (carry). Here is an example:
+
+
+Start:
+
+ ld a, 100
+ dec a
+ jr nz, Start:
+
+Finished:
+ .
+ .
+
+This will loop 100 times until A=0. Once A=0, the zero flag will be
+set and it wil jump to Finished:
+
+
+CALL
+----
+
+Call lets you call subroutines. You can call any destination address,
+and the PC register is pushed on to the stack. Then once the "ret"
+function is executed, it returns to the original calling location.
+Example..
+
+ Start:
+
+ call My_routine:
+
+ Hello:
+ .
+ .
+ ret ; Ends the whole program
+ 
+
+ My_routine:
+ .
+ .
+ ret ; Returns to calling program which goes to Hello:
+
+                        ÄÄÄÄÄÄ The Stack  ÄÄÄÄÄÄ
+
+ The Stack is a special memory location that acts like a stack of cards.
+When you PUSH a value on the stack, it is like putting a card (register,
+number) on the deck. When you POP a value of the stack of cards, it is
+like POPPING a card (register, value) off the top of the deck. This
+is called LIFO (Last In First Out).
+
+ The 16-bit register SP has the location of current "top" of the stack.
+
+PUSH & POP 16-bit
+-----------
+
+PUSH and POP require the one operand to be 16-bit
+
+PUSH (BC or DE or HL or AF or IX or IY)
+
+POP (BC or DE or HL or AF or IX or IY)
+
+PUSHING a value decrements the SP, loads the high order byte of the
+ 16-bit register into SP, then decrements SP again, loading the low
+ order byte into into SP.
+
+POPPING a value stores the byte value in SP into the low order of the
+ 16-bit register. Then SP is incremented, and the byte value in SP
+ is stored in the high order of the 16-bit register.
+
+The stack gets updated everytime you use call. Call pushes PC on to
+the stack, and Pops it back off at the end of the subroutine.
+
+
+                        ÄÄÄÄÄÄ Rom calls  ÄÄÄÄÄÄ
+
+ Calls to Rom are simple. You use the instruction Call to call a
+subroutine in Rom to do all the work for you. Usually the call is
+done to rom page 1 where the "call table" is located. That way
+you do not have to worry about switching rom pages.
+
+ My sample program uses _puts. _puts is an alias for location $4A37,
+which is in the call table. The alias is declared in the ti86asm.inc
+file.
+
+ For example, _puts require that you have HL the location of a string
+of bytes which is terminated with null. Then you call _puts, and it
+displays the string at address HL and ends when it sees NULL (0).
+
+                        ÄÄÄÄÄÄ Remember This?  ÄÄÄÄÄÄ
+
+Take a look at this sample program. Now you should understand every
+line, every comment.
+
+;------------ BEGIN HERE --------------
+#include "asm86.h"       ;Includes procedures that came with asm86.
+#include "ti86asm.inc"   ;Includes common procedures that TI provides.
+
+.org _asm_exec_ram       ;All TI-86 asm programs start at this address 
+                         
+        call _clrLCD     ;Calls a ROM routine to clear the screen
+        ld hl,$0000      ;Stores $00 in h, $00 in l
+        ld (_curRow),hl  ;Stores 00 in _curRow, 00 in _curCol
+        ld hl,hello      ;Stores the address of hello into hl
+        call _puts       ;Calls a ROM routine to display a string
+                         ;at address hl until it reaches NULL (binary 0)
+
+        ret              ;Returns to the calling program
+                         ;Calculator will crash without it
+
+
+hello:
+; Defines a string. This is stored in address hello
+;    where hello is a label and represents the address
+;    of the start of the string. It ends with a
+;    binary 0, also called NULL
+
+        .db "TI-86 Z80 Asm is Easy",0
+           
+
+.end ; The end of the source code
+;------------- END HERE ---------------------
+
+
+                        ÄÄÄÄÄÄ Conclusion  ÄÄÄÄÄÄ
+
+ That was long! I think this is enough for one lesson. My next lesson
+will include more instructions, i.e. bit manipulating, and common
+routines such as _vputs and _Ipoint. I will also show you how to use
+the bit table accessed off of IY. A different sample source code will
+be used, I just got tired (I already spent 5 hours on this tutorial!!)
+
+ If you catch any mistakes, E-mail me.. It's been a long day!
+
+- Matthew Johnson
+
+Alias: Cyber Optic
+E-mail: matt514@gte.net
+Homepage: http://home1.gte.net/matt514/
+My TI-86 asm Page: http://www.dogtech.com/cybop/ti86/
+
+
+See ya later!
+
+
+
+

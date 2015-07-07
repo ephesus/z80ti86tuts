@@ -1,0 +1,30 @@
+TI-86 Variable Stuff
+
+Variable data starts on RAM page 2 (0 and 1 are system data, etc.)
+The VAT (Variable Access table starts the end of RAM page 7 (C000) and builds
+downward. There is a VAT entry for each variable. VAT entry format is:
+
+Bytes	Description
+1	Type byte
+3	absolute pointer to variable data, see end of this document if
+	you don't know about absolute addresses yet...
+1	seems to be always 0, maybe is flags byte?
+1	name length
+<8	name
+
+NOTE: this is backwards, the type byte is at the highest address, the name
+is at the lowest address.
+
+Absolute Addresses (RAM)
+
+000000-00FFFF	page 0, offset 0000-FFFF
+010000-013FFF	page 1, offset 8000-BFFF
+014000-017FFF	page 2, offset 8000-BFFF
+018000-01BFFF	page 3, offset 8000-BFFF
+01C000-01FFFF	page 4, offset 8000-BFFF
+020000-023FFF	page 5, offset 8000-BFFF
+024000-027FFF	page 6, offset 8000-BFFF
+028000-02FFFF	page 7, offset 8000-FFFF
+
+NOTE: if the most significant byte is greater than 2, the TI-86 ROM v1.2
+acts as if it were 2.

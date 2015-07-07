@@ -1,0 +1,856 @@
+    ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+    ³              Matt Johnson's Z80 Programming Tutorial             ³
+    ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+               ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+               ³      Programming the TI-86 ³  PART 02       ³
+               ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+               ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+               ³ Binary / Hex / Logical Operators / Bit Masks ³
+               ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+        If you catch any mistakes or have any
+                additions, comments, anything, e-mail me immediately!
+
+My e-mail address is Matt514@gte.net
+My Home Page is at http://home1.gte.net/matt514/matt.htm
+My TI-86 Web Page is at http://www.dogtech.com/cybop/ti86/
+
+
+             ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ BINARY/HEX/ETC  ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ
+
+ This lesson is very powerful. I do not go into detail about Z80
+instructions because this lesson can be applied to almost every
+CPU around! Very important, binary, hex, bit manipulation, and
+logical operators IS when you KNOW your programming Assembly!!
+
+
+ This lesson can be very boring. But it explains a lot. Assembly
+language requires a lot of math, especially hex and binary. Also
+you will learn logical operators such as AND, OR, XOR. Bit masks
+will also be explained in this lesson.
+
+ A few people requested my this tutorial be on binary/hex/etc,
+which was my original plans anyway. Zshell school and others
+don't go into much detail on these subjects, which are
+extremely important.. Enjoy!
+
+
+
+             ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ NUMBERING SYSTEMS  ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ
+
+  All numbering systems are based on any value of digits. The decimal
+system has 10 digits, the binary system has 2 digits, and the hexadecimal
+system has 16 digits. 
+
+  Take the number 315 for example. To convert this number into a decimal
+number, simply multiply each part (3, 1, 5) by its place value, and add
+them. Every Place Value are in multiples of 10. In this example, 5 is
+in the one's place, 1 is in the ten's place, and 3 is in the hundred's
+place. You could also say 5 is in the 10 ^ 0 place, 1 is in the 10 ^ 1
+place, and 3 is in the 10 ^ 2 place.
+
+
+         ÚÄÄÄÄÄÄÄÄÄÄ Value
+         ³   ÚÄÄÄÄÄÄ Base
+3 1 5    ³   ³    ÚÄ Place
+³ ³ ³    ³   ³    ³
+³ ³ ÀÄÄÄ 5 * 10 ^ 0 = 5 * 1   =   5
+³ ÀÄÄÄÄÄ 1 * 10 ^ 1 = 1 * 10  =  10
+ÀÄÄÄÄÄÄÄ 3 * 10 ^ 2 = 3 * 100 = 300
+                               ÄÄÄÄÄ
+                                315
+
+This shouldn't be difficult to understand. Decimal has the 1's place, 10's
+place, 100's place, etc. So if in the 1's place, there is a value 5, then
+the total amount of the 1's place is 5.
+
+3 5
+| |
+| |___ One's Place
+|
+|______ Ten's Place 
+
+
+What if 35 is a decimal number? Then:
+
+Decimal Value = One's Place + Ten's Place
+              = (3 * 10 ^ 1) + (5 * 10 ^ 0)
+              = (3 * 10) + (5 * 1)
+              = 30 + 5
+              = 35
+
+What if 35 is a hex number? Then: [more on this later]
+              = One's Place + Ten's Place
+              = (3 * 16 ^ 1) + (5 * 10 ^ 0)
+              = (3 * 16) + (3 * 1)
+              = 48 + 5
+              = 53
+35 HEX is 53 decimal.
+
+
+
+                 ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ BINARY  ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ
+
+
+  The Binary system is a Base 2 numbering system composed of two digits,
+0 and 1. Every Place Value are in multiples of 2. 
+
+  Most computer systems operate on binary logic. Binary is used right
+down to the circuits, where electronic switches can be either in
+the ON state or the OFF state. Electronics which take use of binary,
+bits, and bytes, are called digital circuits.
+
+BIT    0
+NIBBLE 0000
+BYTE   00000000
+
+ A binary 0 or 1 is a bit.
+ A pattern of of 4 bits is a nibble.
+ A pattern of 8 bits is a BYTE.
+ A pattern of 16 bits is a WORD.
+ A pattern of 32 bits is a DOUBLE WORD.
+
+ A bit represents ON or OFF, 0 or 1, SET or RESET. 
+
+ A bit is 1-bit (duh!), a nibble is 4-bits, and a byte is 8-bits. One
+hex digit represents a 4-bit number. More on that later.
+
+In Computers and electronic circuits decimal numbers are represented
+by binary numbers. Binary Numbers also serve as codes that represent
+letters of the alphabet, the color of a pixel, etc..
+ 
+ Binary numbers are often set up as patterns to represent letters. The common
+ASCII system uses an 7-bit value to code for 128 values. When 8-bit values
+are used, a maximum of 256 characters can be coded for. This allows the use
+of both standard ASCII and extended ASCII. 
+
+             ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ  MAKE-UP OF BINARY  ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ
+
+
+Converting Binary into Decimal:
+
+         ÚÄÄÄÄÄÄÄÄÄÄ Value
+         ³   ÚÄÄÄÄÄÄ Base
+1 0 1    ³   ³    ÚÄ Place
+³ ³ ³    ³   ³    ³
+³ ³ ÀÄÄÄ 1 * 2 ^  0 = 1 * 1  =   1
+³ ÀÄÄÄÄÄ 0 * 2 ^  1 = 0 * 2  =   0
+ÀÄÄÄÄÄÄÄ 1 * 2 ^  2 = 1 * 4  =   4
+                               ÄÄÄÄÄ
+                                 5  
+8 4 2
+³ ³ ³ (Combinations)                                
+1 0 1
+³ ³ ³ (Place Value)
+4 2 1
+
+So   101 is 1*1+0*2+1*4, or simply 4+1+0, which is 5! Understand!?!?
+Also 101 has 8 combinations, 000,001,010,011,100,101,110,111. Cool Ehh?
+
+Converting Decimal into Binary:
+
+ÚÄÄÄÄÄÄÄÄÄÄÄÄÄ Value
+³   ÚÄÄÄÄÄÄÄÄÄ Base 
+³   ³   ÚÄÄÄÄÄ Quotinent
+³   ³   ³  
+³   ³   ³    ÚÄ Remainder
+5 / 2 = 2 +     1
+2 / 2 = 1 +    0³
+              1³³(Final Quotient is Final Remainder)
+              ³³³  
+Answer:       101  
+
+So 5 is BINARY 100 + BINARY 00 + BINARY  1 = 101 
+So 5 is DECIMAL 4  + DECIMAL 0 + DECIMAL 1 =  5
+
+
+    ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ  Bits, Bytes, & Words in Detail ÄÄÄÄÄÄÄÄÄÄÄ
+
+_________________________________________________________
+1  BIT ³ 2              Combinations ³ 0 to 1            ³
+2  BIT ³ 4              Combinations ³ 0 to 3            ³
+3  BIT ³ 8              Combinations ³ 0 to 7            ³
+4  BIT ³ 16             Combinations ³ 0 to 15           ³
+5  BIT ³ 32             Combinations ³ 0 to 31           ³
+6  BIT ³ 64             Combinations ³ 0 to 63           ³
+7  BIT ³ 128            Combinations ³ 0 to 127          ³
+8  BIT ³ 256            Combinations ³ 0 to 255          ³
+9  BIT ³ 512            Combinations ³ 0 to 511          ³
+10 BIT ³ 1024           Combinations ³ 0 to 102          ³
+12 BIT ³ 4096           Combinations ³ 0 to 4095         ³
+15 BIT ³ 32768          Combinations ³ 0 to 32767        ³
+16 BIT ³ 65536          Combinations ³ 0 to 65535        ³
+24 BIT ³ 16,777,216     Combinations ³ 0 to 16,777,215   ³
+32 BIT ³ 4,294,967,296  Combinations ³ 0 to 4,294,967,295³
+----------------------------------------------------------
+
+ If you look at this chart, you see that, for example, 4 bits can
+represent up to 16 different things. 4-bits is enough to count
+up to 15 (from 0 to 15 = 16 total numbers)
+
+ The number of combinations in 2 ^ n, where n is the
+number of digits.
+
+  This means that in a binary number, every digit to the left is two
+times the place value of its right neighbor. Lets take a 4-bit
+number (called a NIBBLE), for example.
+
+ 1 0 1 1   - Binary Number
+ --------
+ 8 4 2 1   - One's place, Two's place, Four's Place, Eight's Place.
+
+Binary Number---|
+                |
+Place Value-|   |
+            8 * 1 = 8
+            4 * 0 = 0
+            2 * 1 = 2
+        +   1 * 1 = 1
+            -----  ----
+                    11
+
+                 ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ NIBBLES ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ
+
+ Nibbles are a pattern of four bits. It is also a good little snake
+game too :-). The reason nibbles are important is for two things:
+Hexadecimal and BCD (Binary Coded Decimal).
+
+ In BCD, a NIBBLE is used to represent on decimal number. This is because
+a nibble can represent from 0 to 15. 3-bits would not be enough since
+it only goes from 0 to 7.
+
+ In Hex, a NIBBLE represents one hex digit. Hex is base 16 meaning that
+there are a total of 16 numbers per digit. So 1 HEX digit is 1 NIBBLE.
+Since the range of a 4-bit number (0 to 15) is the same as the range
+of a hex number (0 to 15), it makes these numbers EXTREMELY EASY to
+convert between the two.
+
+ These TOPICS are explained in righteous DETAIL
+  after the section on BYTES.
+
+
+
+
+
+                 ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ  BYTES  ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ
+
+
+ Lets take an 8-bit number (called a BYTE) for example: 10101111
+
+
+ Some people find it easier to seperate the number in groups of 4,
+ just like seperating decimal numbers by commas.
+ 
+ 0110 1111 - Binary Number
+ --------- 
+ 7654 3210 - Bit Number
+
+ Bit 0 (the far right bit), is 1 in this example. Bit 0 is called the
+                            LSB (Least Significant Bit)
+ Bit 7 (the far  left bit), is 0 in this example. Bit 7 is called the
+                            MSB (Least Significant Bit)
+
+ Bit 0 to bit 3 is called the L.O. (Low Order Nibble)
+ Bit 4 to bit 7 is called the H.0. (High Order Nibble)
+
+
+Lets find the place value for each of these bits
+
+ 0  1  1  0  1  1  1  1
+ ----------------------
+128 64 32 16 8  4  2  1
+
+
+   Bit 0: 1 * 1   = 1
+   Bit 1: 1 * 2   = 2
+   Bit 2: 1 * 4   = 4
+   Bit 3: 1 * 8   = 8
+   Bit 4: 0 * 16  = 0
+   Bit 5: 1 * 32  = 32
+   Bit 6: 1 * 64  = 64
++  Bit 7: 0 * 128 = 0
+  ---------------------
+   This byte is     111 in decimal.
+
+
+            ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ BINARY CODED DECIMAL ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ
+
+BINARY CODED DECIMAL (BCD): A system in which each decimal digit is assigned
+its binary equivalent. For example,
+
+1 9
+³ ³
+³ ÀÄÄÄ 9 = 1001
+³
+ÀÄÄÄÄÄ 1 = 0001
+
+So  19=0001 1001
+and 23=0010 0011
+and 123 = 0001 0010 0011
+
+ ...and 69 = 0110 1001 ... and you thought that you couldn't
+express your feelings toward that one girl you saw in school
+in Binary! :)
+
+Understand? It is pretty easy!
+
+                  ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ HEXADECIMAL ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ
+
+ Let's Face it. Binary Numbers are difficult to use. They take up a lot of
+space, look ugly, and smell bad too! Plus it's a pain in the neck using 4,
+8, and 16 bit values with decimal, since you can't easily convert binary 
+numbers into decimal numbers. That's where HexaDecimal comes in!
+
+ A hexadecimal number is a numbering system based on 16 digits. This means
+that every place value is in multiples of 16.
+
+ ..But then how do we show 16 values in one digit! There's only 10 numbers
+on the keyboard 0..9. Well after the number 9, letters of the alphabet are
+used instead. So to count in hexadecimal, it would be 0,1,2,3,4,5,6,7,8,9,A,
+B,C,D,E,F.
+
+  Lets look at a sample hexadecimal number.
+
+4CF
+
+ What the hell is that? Well its like any other old number, except that it
+just looks different (and is hexadecimal!) Let's take this number and show
+its place values.
+
+
+4 C F
+³ ³ ³
+³ ³ ÀÄÄÄ 1's   Place
+³ ÀÄÄÄÄÄ 16's  Place
+ÀÄÄÄÄÄÄÄ 256's Place
+
+Let's See it's Binary equivalents:
+
+4 C F
+³ ³ ³
+³ ³ ÀÄÄÄ 1111
+³ ÀÄÄÄÄÄ 1100
+ÀÄÄÄÄÄÄÄ 0100
+
+The neat thing about hexadecimal is any 4-bit value can be stored as one
+hex digit. This is because 4-bits equal 16, 1-Hex equals 16. 
+
+So in Binary 4=0100 C=1100 F=1111
+4CF= 0100 1100 1111, 4CF= 010011001111  
+
+        Hmm.. 010011001111 is a 12-bit number. A 12-bit value has 2 ^ 12
+combinations. A 3 digit hex number has 16 ^ 3 combinations. Well that means
+that a 12-bit binary number is just like a 3-digit hex number! A 8-bit binary
+number is like a 2-digit hex number, and a 4-bit binary number is like a
+1-digit hex number. Each Hex digit has a 4-bit equivalent! That's why people
+use Hexadecimal! Because 4CF is a whole lot easier to handle then freaking
+010011001111!
+
+
+
+4 C F
+³ ³ ³
+³ ³ ÀÄÄÄ 15 * 10 ^ 0 = 15 * 1   =    15
+³ ÀÄÄÄÄÄ 12 * 10 ^ 1 = 12 * 16  =   192
+ÀÄÄÄÄÄÄÄ  9 * 10 ^ 2 =  4 * 256 =  1024
+                                  ÄÄÄÄÄÄ
+                                   1231  
+
+             ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ Logical Operators ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ
+
+ The Z80 has many instructions that change a byte in some form
+or fashion. I will not go into the detail behind the instructions
+themselves (that will be another lesson), however you will learn the
+concept of bit manipulation.
+
+ The three most important logical operators are AND, OR, and XOR.
+If you ever read anything about digital electronics, this should all
+sound familiar.
+
+ AND is a digital logic gate in electronics. It actually uses
+ transisters to compare two bits.
+
+ AND is used to logically "and" two numbers together. When you "AND"
+ two bits for example, the result is 1 (true) only when both bits are
+ 1 (true). Lets look at a "truth table".
+
+ "AND"
+
+ A   B    RESULT
+ ----------------
+ 0   0      0
+ 0   1      0
+ 1   0      0
+ 1   1      1
+
+ Basically, if A and B are 1 (TRUE) then the RESULT is 1 (TRUE)
+
+ What if the numbers are more then 1-bit? Well then you are "AND"ing
+ a number bit by bit.
+
+"AND" A & B
+
+    A  11100101
+    B  00110101
+---------------
+       00100101
+
+
+In Byte A & B, bit 0, bit 2, and bit 5 are BOTH 1 (TRUE). If you look
+ at the truth table, it takes two TRUE (1) bits to make a TRUE result
+
+So in the answer, bit 0, bit 2, and bit 5 are ALL 1 but the rest of
+the bits are 0.
+
+ OR is also used as a digital logical gate thing-a-mahgig. It also
+uses transisters.
+
+ OR is used to logically "OR" two numbers together. When you "OR"
+to bits for example, the result it 1 (true) if 1 of the bits are
+1 (true). Let's look at a "truth table"
+
+ A   B    RESULT
+ ----------------
+ 0   0      0
+ 0   1      1
+ 1   0      1
+ 1   1      1
+
+Basically, if A or B is 1 (TRUE), then the RESULT is 1 (TRUE)
+
+ What if the numbers are more then 1-bit? Well then you are "OR"ing
+a number bit by bit.
+
+"OR" A & B
+
+    A  11100101
+    B  00110101
+---------------
+       11110101
+
+
+ As you can see, whenever a bit in "A" or a bit in "B" are 1 (true), then
+the result of that bit is 1 (true).
+
+In Byte A & B, bit 1, and bit 3 are BOTH 0 (FALSE). If you look
+ at the truth table, it takes two FALSE (0) bits to make a FALSE result
+
+Likewise, it takes One TRUE bit to make a result of 1 (TRUE)
+
+So in the answer, bit 1, and bit 3 are ALL 0 but the rest of
+the bits are 1.
+
+ XOR is a more complicated digital logic gate. However the rules
+are still simple.
+
+ XOR is used to logically "Exclusive OR" two numbers together. When you
+XOR two bits, for example, the RESULT is 0 (FALSE) if both bits are
+THE SAME. Let's look at a TRUTH table,
+
+ A   B    RESULT
+ ----------------
+ 0   0      0
+ 0   1      1
+ 1   0      1
+ 1   1      0
+
+As you can see, whenever both A & B are the SAME, then the RESULT is 0.
+Or whenever ONLY ONE bit is 1 (TRUE), the RESULT is 1 (TRUE.)
+
+ What if the numbers are more then 1-bit? Well then you are
+ "Exclusive OR"ing a number bit by bit.
+
+"XOR" A & B
+
+    A  11100101
+    B  00110101
+---------------
+       11010000
+
+
+ As you can see, whenever a bit in "A" or a bit in "B" are EQUAL, then
+the result of that bit is 0 (FALSE).
+
+In Byte A & B, bit 0,1,2,3, and bit 5 are EQUAL. If you look
+ at the truth table, it takes two EQUAL bits to make a FALSE result
+
+ NOT is a really simple gate. If A=1 then A=0. If A=0 then A=1.
+It is like, A is not A. Let's look at a truth table:
+
+ A    RESULT
+ -----------
+ 0       1
+ 1       0
+
+ What if the numbers are more then 1-bit? Well then you are "NOT"ing
+(inverting) a number bit by bit.
+
+"NOT" A
+
+    A  11100101
+---------------
+       00011010
+
+Byte A becomes inverted
+
+What if you "NOT" A, and byte A is the binary number 1111?
+
+A 00001111
+----------
+  11110000
+
+As you might have not expected, byte A is not zero. NOT inverts all
+bits in a byte. So any bits that are zero are now 1. 
+
+
+     ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ The POWER OF BINARY - Bit MASKS! ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ
+
+ Don't get too excited now! :).. Heheh, by now, you probably are half
+asleep drooling on your keyboard! Anyway, the use of bit masks are
+very powerful, yet least talked about. With bit masks, you can change
+bits, set bits, reset bits, ignore bits, and manipulate bits like the
+gullible electronic entities they are!
+
+  How the hel....lo? Yes, Bit masks and the such allow you to do
+all these. Bit masks are named because you "MASK" (Hide) some of
+the bits you don't need to mess with and only mess with what you
+need. We use LOGICAL OPERATORS and a SERIES of BITS (like a byte)
+for the mask.
+
+ So basically, a mask is a series of bits, usually a BYTE, that
+is setup up so when it is applied with a logical operator, one
+or more bits are ignored.
+
+1.) How to SET a bit. (Set means BIT = 1)
+
+To set a bit, we can use the logical operator OR.
+
+Lets take byte "A" for example: A = 1110101
+                                         ||__  Bit 0
+                                         |____ Bit 1
+
+Ok, suppose we want to set the bit 1, which equals 0 right now.
+First we need to create a MASK that IGNORES all the other bits
+and we then can CONCENTRATE on BIT 1. We need a mask, where, when
+the OR operation is applied, does not allow the any bits to change
+EXCEPT bit 1. Do you see why?
+
+Mask "B" : B = 00000010
+
+Now when you "OR" A & B, you get
+
+A = 1110101
+B = 0000010
+-----------
+    1110111
+         |____ Bit 1 now SET!!
+
+SO BASICALLY REMEMBER THIS:
+ When you are using "OR" to SET a BIT (or bits),
+then in the MASK, use 0 to ignore that bit and  1 for the bit(s)
+you want set.
+
+2.) How to CLEAR a bit (Clear means BIT = 0)
+
+To clear a byte, we can use the logical operator AND.
+
+Lets take byte "A" for example: A = 1110101
+                                         ||__  Bit 0
+                                         |____ Bit 1
+
+Ok, suppose we want to clear Bit 0, which equals 1 right now. So we
+need to create a MASK that ignores ALL BITS EXCEPT BIT 0. We need a
+MASK, that, when the AND operation is applied, does not allow any
+bits to change EXCEPT BIT 0. Can you see why? Pretty Easy!
+
+Mask "B" : B = 11111101
+
+So when you AND A & B, you get
+
+A = 1110101
+B = 1111101
+-----------
+    1110100
+          |___ BIT 0 is NOW CLEAR!!
+
+SO BASICALLY REMEMBER THIS:
+
+When you are using "AND" to CLEAR a BIT (or bits),
+then, in the MASK, use 1 to ignore that BIT and 0
+for the BIT(s) you want to CLEAR.
+
+
+3.) How to CHANGE a BIT. (Change means invert BIT, or BIT = NOT BIT)
+
+To change (invert) a BIT, we use the logical operator XOR.
+
+ We do not use NOT because NOT inverts EVERY bit. We only want to
+invert one or more bits.
+
+Lets take byte "A" for example: A = 1110101
+                                    |
+                                    |____ Bit 7
+
+Ok, suppose we want to CHANGE bit 7, which equals 1 right now.
+We need to create a MASK that ignores all bits except bit 7.
+Now this should be simple by now!
+
+Mask "B" :  10000000
+
+So when you XOR A & B, you get this:
+
+A = 1110101
+B = 1000000
+-----------
+    0110101
+    |___ BIT 7 has now been CHANGED (inverted)!!
+
+SO BASICALLY REMEMBER THIS:
+
+When you are using "XOR" to CHANGE a BIT (or bits),
+then, in the MASK, use 0 to ignore that BIT and 1
+for the BIT(s) you want to CHANGE.
+
+
+
+    ÄÄÄÄÄÄÄÄÄÄÄÄÄ Setting/Clearing/Changing Multiple Bits ÄÄÄÄÄÄÄÄÄÄÄ
+
+ Setting, clearing, or changing multiple bits are really easy! You
+just change the masks.
+
+ For example, if you wanted to SET bit 6 and bit 2, just make sure that
+when you are using the "OR" operation, that the MASK has a 1 for the
+the bits you want set (bit 6 and bit 2) and 0 for the bits you want
+to ignore (the other 6 in that byte)..
+
+ Just read the little paragraph after each section labled "SO BASICALLY
+REMEMBER THIS:" in the previous section.
+
+   ÄÄÄÄÄÄÄÄÄÄÄÄÄ The POWER of AND - Ignoring bits ÄÄÄÄÄÄÄÄÄÄÄ
+
+AND is very useful when you want to ignore (or mask away) some bits.
+For example, if you are only interested in the lower 4-bits of a
+byte, because the upper four bits are junk, then just simply ignore
+(erase), the upper 4-bits. You do this by using the mask 00001111.
+Now only the lower 4-bit remains. 
+
+   ÄÄÄÄÄÄÄÄÄÄÄÄÄ The POWER of OR - Setting bits ÄÄÄÄÄÄÄÄÄÄÄ
+
+You can use OR to set bits, as you learned before. What if you wanted
+an easy way to add 128 to a number? If you knew a number was always
+63 or below, you could easily add 128 by setting bit 7. Never though
+about that, Ehh?
+
+   ÄÄ More Binary Power using XOR - Simple Encryption methods ÄÄÄÄÄÄÄÄÄ
+
+XOR can be used to encrypt and decrypt things suprising simple!
+
+Suppose you wanted to encrypt a letter. You simply XOR that letter
+by any 8-bit number, like 17, and then it is encrypted. When you
+XOR the encrypted letter again it then gets decrypted!
+
+I will use a number as an example. Lets ENCRYPT the number 15
+and the "password" is 43. This means that we are going to XOR
+13 by 43.
+
+XOR (to encrypt)
+
+13 = 001101 (13 is the letter to encrypt)
+43 = 101011 (43 is the password)
+-----------
+     100110 (which is 38)
+
+Encrypted number is 38.
+
+Now lets do that again.
+
+XOR (to decrypt)
+
+38 = 100110 (38 was previously encrypted, now here to decrypt)
+43 = 101011 (43 is the password)
+-----------
+     001101 (which is 13, successfully decrypted!)
+
+
+Letters work exactly the same! All letters are are a series of bits,
+Usually 7 to 8-bits. On the IBM/PC, 7-bits are used to represent 128
+ASCII characters, and 8-bits represents 128 standard ASCII characters
+and 128 Extended ASCII characters.
+
+REMEMBER, LETTERS ARE JUST BINARY NUMBERS!
+
+XOR is the most simple form of encrypting available, so don't
+thing the XOR technique is going to make you a top notch
+security program.
+
+           ÄÄÄÄÄÄÄÄÄÄÄÄÄ The POWER of my FIST  ÄÄÄÄÄÄÄÄÄÄÄ
+
+Just joking around! Trying to make this binary tutorial interesting
+because it is so long!
+
+
+     ÄÄÄÄÄÄÄÄÄÄÄÄÄ How are binary/hex numbers represented then? ÄÄÄÄÄÄÄ
+
+ How does the TASM (Table Assembler) know if a number is a hex number,
+decimal number, or binary?
+
+ If a number begins with a $ or ends with a "h" then it is known
+   to be a hex number.
+
+ If a number begins with a % or ends with a "b" then it is known
+   to be a binary number.
+
+ If a number includes neither of these, then it is decimal.
+
+ It is best to use $ or % since it appears to be more clear and
+  easier to read the source then.
+
+
+
+  ÄÄÄÄÄÄ Table of Binary/Hex/Decimal Numbers or Conversions ÄÄÄÄÄÄ
+
+DEC               BIN            BCD                  HEX
+-------------------------------------------------------------
+ 0                  0         0000  0000               0
+ 1                  1         0000  0001               1
+ 2                 10         0000  0010               2
+ 3                 11         0000  0011               3
+ 4                100         0000  0100               4
+ 5                101         0000  0101               5
+ 6                110         0000  0110               6
+ 7                111         0000  0111               7
+ 8               1000         0000  1000               8
+ 9               1001         0000  1001               9
+10               1010         0001  0000               A
+11               1011         0001  0001               B
+12               1100         0001  0010               C
+13               1101         0001  0011               D
+14               1110         0001  0100               E
+15               1111         0001  0101               F
+16              10000         0001  0110              10
+17              10001         0001  0111              11
+18              10010         0001  1000              12
+19              10011         0001  1001              13
+20              10100         0010  0000              14
+21              10101         0010  0001              15
+22              10110         0010  0010              16
+23              10111         0010  0011              17
+24              11000         0010  0100              18
+25              11001         0010  0101              19
+26              11010         0010  0110              1A
+27              11011         0010  0111              1B
+28              11100         0010  1000              1C
+29              11101         0010  1001              1D
+30              11110         0011  0000              1E
+31              11111         0011  0001              1F
+32             100000         0011  0010              20
+64            1000000         0110  0100              40
+96            1100000         1001  0110              60
+99            1100011         1001  1001              63
+
+          ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ SUMMARY (Conversions) ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ
+
+Has your mind exploded yet? Here's a "quick" summary.
+
+Numbers are written as successive powers of the base of the numbering system.
+Thus 15 = (1 * 10 ^ 1)+(5 * 10 ^ 0)
+        = (1 * 10) + (5 * 1)
+        = 10 + 5
+        = 15
+
+Binary is a numbering system composed of 0's and 1's.
+
+A BIT is a binary 0 or 1
+A NIBBLE is a combination of 4-bits, with a maximum value of 16
+A BYTE is a combination of   8-bits, with a maximum value of 256.
+                
+ÄÄ Converting Binary to Hex ÄÄ
+
+F 3
+
+F=1111
+3=0011
+F3=1111 0011
+  =11110011  
+
+ÄÄ Converting Hex to Binary ÄÄ
+1 C
+
+1=0001
+C=1100
+1C=0001 1100
+  =   1 1100
+  =11100  
+
+ÄÄ Converting Hex to Decimal ÄÄ
+
+143
+
+1 * 16 ^ 2 = 256
+4 * 16 ^ 1 =  64
+3 * 16 ^ 0 =   3
+           ÄÄÄÄÄÄÄ                 
+             323  
+
+So 143 in hex is 323 in decimal.
+
+ÄÄ Converting Decimal to Hex ÄÄ
+320
+
+320/16=20 +   0
+ 20/16= 1 +  4_
+            1__  (Final Quotient is Final Remainder)
+            ÄÄÄÄ
+            140  
+
+So 320 in decimal is 140 in hex.
+
+Each time you divide you move on to the next left place value you need to
+convert! So Simple!
+
+
+ÄÄ Converting Binary to Decimal ÄÄ
+10011
+
+1 * 2 ^ 5 = 1 * 16 =    16
+0 * 2 ^ 4 = 0 *  8 =     0
+0 * 2 ^ 3 = 0 *  4 =     0
+1 * 2 ^ 2 = 1 *  2 =     2
+1 * 2 ^ 1 = 1 *  1 =     1
+                     ÄÄÄÄÄÄÄ
+                        19  
+
+ÄÄ Converting Decimal to BinaryÄÄ
+230
+
+230/2 = 115 +         0
+115/2 = 57  +        1³
+57 /2 = 28  +       1³³
+28 /2 = 14  +      0³³³
+14 /2 = 7   +     0³³³³
+7  /2 = 3   +    1³³³³³
+3  /2 = 1   +   1³³³³³³
+               1³³³³³³³   (Final Quotient is Final Remainder)
+          ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ
+               11100110  
+
+
+               ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ CONCLUSION ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ
+
+
+This concludes to what is probably the largest BINARY and HEX tutorial
+on the face of this Earth! There should be no question in mind about
+how binary, hex, bit masks, etc, work after you read this tutorial!
+
+ Thanks for Reading!!
+
+-Cyber Optic
+
+        If you catch any mistakes or have any
+                additions, comments, anything, e-mail me immediately!
+
+My e-mail address is Matt514@gte.net
+My Home Page is at http://home1.gte.net/matt514/matt.htm
+My TI-86 Web Page is at http://www.dogtech.com/cybop/ti86/
+

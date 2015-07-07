@@ -1,0 +1,310 @@
+    ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+    ³              Matt Johnson's Z80 Programming Tutorial             ³
+    ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+               ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+               ³      Programming the TI-86 ³  PART 01       ³
+               ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+               ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+               ³    Introduction to TI-86 Z80 programming    ³
+               ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+
+                ÄÄÄÄÄÄÄÄÄÄÄÄÄ INTRODUCTION  ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ
+
+    Welcome to this Tutorial! Someone once said, the best way to
+learn something is to teach it. Well once again Cyber Optic is back
+to teach his wisdom! Well.. Uhh.. At least I can try! This tutorial
+teaches you how to program Z80 assembly language for the TI-86.
+
+           ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ  HOW TO FIND ME ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ
+
+ Who ever reads this tutorial and finds it useful should e-mail me
+your comments, questions, or complaints. Keep in mind that I am also
+a beginner in programming, so don't be disappointed if I can't answer
+your questions.
+
+        If you catch any mistakes or have any
+                additions, comments, anything, e-mail me immediately!
+
+My e-mail address is Matt514@gte.net
+My Home Page is at http://home1.gte.net/matt514/matt.htm
+My TI-86 Web Page is at http://www.dogtech.com/cybop/ti86/
+
+             ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ  REQUIREMENTS ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ
+
+Hardware
+---------
+ - TI-86 (Duh!)
+ - TI Graphlink Cable
+ 
+Software
+--------
+ - asm86 v 2.0
+ - TI Updated Include Files
+ - TASM 3.01
+ - TASM80.TAB
+ - TI Graphlink Software
+
+ NOTE: One of these programs requires a DPMI environment, which
+          Windows 95 fullfills.
+
+
+             ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ  DISCLAIMER ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ
+
+Use all this information at your own risk and copy it freely as long
+as credit is give where credit is due (to me!). No Modifications
+allowed without permissions. If you catch any mistakes or have any
+additions, comments, anything, e-mail me immediately! I am not
+responsible if your calculator crashes! This should not be, since
+I will test out every complete program on my own TI-86.
+
+              ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ  THE BASICS ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ
+
+        The TI-86 is an amazing graphic calculator. The 86 was created
+by Texas Instruments. It is commonly desribed as a hybrid between the
+TI-83 and TI-85. With 128K of RAM, assembly support, and a slick design,
+this calculator should become popular in no time at all!
+
+        Assembly for a calculator? Yes that is correct! This calculator
+officially supports Z80 assembly language, just like the TI-83.
+
+        Z80!!?? What the hell is that? Well Z80 is a microprocessor
+created by Zilog, Inc. The TI-86 uses a 6MHZ Z80. This same CPU is also
+used in the TI-82, 83, & 85. It was also used in some very old personal
+computers. Only 6MHZ?? It's amazing what you can do with 6MHZ. People
+have written 3D games resembling Wolf3D style games for the TI-85. The
+TI-86 is the newest one made by Texas Instruments, and the asm
+documentation for the calculator has not even been completed yet.
+This is where this tutorial comes in.
+
+        Is this Z80 asm stuff resemble the assembly language of IBM/
+Compatible computers? In a short word, NO. The Z80 is a very simple
+processor. It has few instructions, it does not even contain a
+multiply instruction.
+
+        Why learn Z80? Why program for a calculator? Why not program
+BASIC then? Well.. why???
+
+        1.) Well imagine creating your own programs for your own
+                calculator, to show off to your friends.. To mess
+                with instead of listening to your boring math
+                teacher.. To expand your knowledge... To finally
+                be able to program something other then an IBM..
+
+        2.) Because your not only are you programming for a
+                calculator, your programming for a computer.
+                Then the question becomes, why program? If
+                you have to ask this question, you are at
+                the wrong place!
+
+        3.) BASIC sucks! I'm sorry, but it just does. I seen a
+                DOOM game in Basic on the TI-82 and it just
+                plain sucked!! It was not smooth scrolling,
+                you could actually see it redrawing the
+                screen!! Ahh! When I saw a Zshell version for
+                the TI-85, damn it was impressive for just a
+                Z80 6MHZ CPU.
+
+
+     ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ What you need to do to begin ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ
+
+These files can be found at my web page or TICALC.ORG. Unzip and move
+these files into a seperate directory such as C:\ASM
+
+ - asm86 v2.0
+ - TI Updated Include Files (There should be 3)
+ - TASM 3.01
+ - Updated TASM80.TAB
+
+
+      ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ Writing your first program ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ
+
+ This section should give you the "feel" of Z80 asm programming, by
+showing you an example of an TI-86 asm program, letting you type
+it out, compile it, and test it on your calculator! This is only to
+give you the basic procedure for programming the TI-86, do not
+worry about understanding how any of the instructions work, since
+this section is made for you to learn the procedure.
+
+Note: I include the comments on all source code given so it will
+      become a habit for me and clarify the programs for you.
+     
+;------------ BEGIN HERE --------------
+#include "asm86.h"       ;Includes procedures that came with asm86.
+#include "ti86asm.inc"   ;Includes common procedures that TI provides.
+
+.org _asm_exec_ram       ;All TI-86 asm programs start at this address 
+                         
+        call _clrLCD     ;Calls a ROM routine to clear the screen
+        ld hl,$0000      ;Stores $00 in h, $00 in l
+        ld (_curRow),hl  ;Stores 00 in _curRow, 00 in _curCol
+        ld hl,hello      ;Stores the address of hello into hl
+        call _puts       ;Calls a ROM routine to display a string
+                         ;at address hl until it reaches NULL (binary 0)
+
+        ret              ;Returns to the calling program
+                         ;Calculator will crash without it
+
+
+hello:
+; Defines a string. This is stored in address hello
+;    where hello is a label and represents the address
+;    of the start of the string. It ends with a
+;    binary 0, also called NULL
+
+        .db "TI-86 Z80 Asm is Easy",0
+           
+
+.end ; The end of the source code
+;------------- END HERE ---------------------
+
+
+      ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ  Compiling Programs ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ
+
+ After you type out the program in the previous section, save the file
+under Samp1.asm. Take this file and put it in your asm directory.
+
+To compile the file, type:
+
+make86p samp1
+
+If all goes well, some stuff will be displayed and you will see
+the message:
+
+***samp1.86p created successfully***
+
+CAUTION! Be sure to type the program exactly as it is. Don't leave
+         out the "ret" instruction or else your calc shall crash!
+
+   ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ  Recovering from Calculator Crashes ÄÄÄÄÄÄÄÄÄÄÄÄÄ
+
+ If you ever make a mistake in your asm program and your calculator
+crashes, then press the "ON" button (which may break out of the
+program), if not then take out the batteries, and then put them
+back in.
+
+ Then press "ON" and your calculator is turned on. It WON'T TURN ON,
+you say! Well probably it is on, you just can't see it. Press [2ND]
+[UP ARROW], to change the contrast higher so you can see the cursor.
+Press [2ND][DOWN ARROW] to lower the contrast. Odviously taking out
+the batteries reset the calculator to the default settings.
+
+ If you use those alkaline rechargeable batteries then you know you
+need to recharge them once the contrast setting needs to be set to
+"7", I believe.
+
+      ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ  Testing It Out ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ
+
+ This is fairly simple. After you compile the program, the file
+SAMP1.86P has been created. Turn on the calculator and keep it on
+the home screen (the main screen with the flashing cursor). Do NOT
+use [2ND][LINK] to get a program. Don't ask me why, it won't work
+for downloading programs to the calculator.
+
+Use the TI-Graphlink software to send SAMP1.86P to your calculator. You
+can do this by going to the Link Menu, hit Send, find SAMP1.86P, hit
+the Add button. Then your cursor stops blinking on the calculator
+briefly while the file is being sent.
+
+ TROUBLESHOOTING: If you have problems sending the file, check:
+        1.) You have a 25-pin serial port
+        2.) It is using a com port that is not conflicting
+                with your serial mouse or modem.
+        3.) If you have a serial mouse and a modem, use COM 3 or 4.
+            Hopefully your have a motherboard has an onboard I/O
+            in the BIOS. Then your 2nd Serial port is probably
+            disabled because COM2 is being used by the modem.
+            Simply re-enable it under COM3 or COM4 and Windows 95
+            should detect the new serial port. Now set up the
+            TI graphlink software under COM3 or 4.
+
+            If your I/O is on a seperate board (daughterboard),
+            then you need to find the manual for that and set
+            some jumpers, enabling the 25-pin serial port to
+            be used as COM3 or COM4.
+
+        4.) This seems really obvious, but trust me, Make sure
+            that the TI graphlink is plugged in to the serial
+            port snuggly and especially the calculator! It may
+            seem to be in, but you would be suprised.
+
+Ok, now hopefully everything went great. You think that the program
+sended OK, no error messages. The TI-86 didn't do anything really,
+it just blanked out briefly. The TI graphlink software will say
+**Completed** on the bottom of the window. Very Good!
+
+    ÄÄÄÄÄÄÄÄÄÄÄÄÄÄ  Running an Assembly language Program ÄÄÄÄÄÄÄÄÄÄÄÄÄ
+
+ This is simple. Just type out "asm(", or hit [2ND][CUSTOM][F1], then
+ select "Asm("
+
+ Then hit [PRGM][F1] and then use [MORE] and [F1] through [F5] to select
+ your program. Select SAMP1
+
+ You should see this:
+
+ asm(SAMP1
+
+ NOTE: "asm(SAMP1" or "asm(SAMP1)" will both work fine.
+
+ Then press Enter to run the program! Yeah! Ti-86 asm is Easy! I do
+ agree myself! Then "Done" is shown to tell you the program has ended.
+
+ By the WAY: To run a BASIC program, just type in the name or select
+             it in the program menu and hit enter.
+
+  ÄÄÄÄÄÄÄÄÄÄÄÄÄÄ  This is not Zshell School Boys and Girls ÄÄÄÄÄÄÄÄÄÄ
+
+ Jimmy Mardell is a very good programmer, and his tutorials were very
+good, but I never thought they were very descriptive, especially on
+the intense stuff. I hope to change that on these tutorials...
+
+ I love SQRXZ by the way!! ;)
+
+
+
+    ÄÄÄÄÄ Summary / Wrap Up / What's coming up Next?!!!? ÄÄÄÄÄÄÄÄ
+
+ Well, Well, first of all, the next lessons I won't be holding your
+hand for you like this one. That doesn't mean I will cut out the
+explanations or remove the comments, I just wont add stuff that
+you should know by now! For example, there won't be any needless
+comments like
+
+ NOTE: "asm(SAMP1" or "asm(SAMP1)" will both work fine.
+
+Because I can't teach common sense on the more advanced lessons.
+
+HOWEVER! I will have all kinds of comments, multiple lines if
+         necessary! I WILL explain the difficult stuff and
+         will go into math if I must. I won't go on until I
+         fully understand it, and my understanding and
+         reasoning will be on these tutorials!!
+         
+I AM NOT AN EXPERT - I am a sophomore in high school, my creative
+                     skills might be lacking until later years and
+                     my ability and learning rate are also slower
+                     then people that are older then me like in
+                     college. So my tutorials may take a while,
+                     but each will be descriptive and uhh.. Cool!
+
+NEXT TUTORIAL WILL BE ON - Compiler directives i.e. db, comments
+                           binary, hex, registers and flags!
+                           (Not necessarly in that order!)
+
+IT WILL BE SOON - Since I seem to only be a few lessons ahead
+                  of each of my tutorials!
+
+
+- Matthew Johnson
+
+Alias: Cyber Optic
+E-mail: matt514@gte.net
+Homepage: http://home1.gte.net/matt514/
+My TI-86 asm Page: http://www.dogtech.com/cybop/ti86/
+
+
+See ya later!
+
+

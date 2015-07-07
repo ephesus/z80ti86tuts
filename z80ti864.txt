@@ -1,0 +1,98 @@
+-[ Memory ]-
+It is helpful to know how memory works on the TI-86. I am now much more
+familiar with memory. Nevertheless, if any mistakes are present, be sure to
+e-mail me at: matt2000@gte.net
+If you do not understand this at first, then skip this tutorial and re-read
+it later on. The "jargon" is intermixed through these tutorials, there is no
+perfect order to present this information to you.
+The memory of the TI-86 is made up of 256K of ROM and 128K of RAM. ROM
+stands for Read Only Memory, and it is permanent, it can not be erased.
+RAM means Random Access Memory, which can be written to and erased freely.
+A little backup battery keeps the RAM from getting erased when you turn
+off your calculator or change the AAA batteries.
+The Z80 processor can only access 16-bits of memory at a time. This is
+even worse then the 20-bit (1 MEG) limit on the XT.
+2 ^ 16 = 65,535 bytes, which is the maximum addressable memory on the
+TI-86.
+The TI-86 takes care of this memory limit by a paging system. This is a
+similar method used in expanded memory on old IBM/PC compatibles.
+The TI-86 divides the memory into four 16K pages:
+  0000h       -------------------------
+             |                         |
+             |   ROM PAGE 0            |
+             |                         |
+  4000h      |-------------------------|
+             |                         |
+             |   SWAPPED ROM PAGE (1-F)|
+             |                         |
+  8000h      |------------------------ |
+             |                         |
+             |   SWAPPED RAM PAGE (1-7)|
+             |                         |
+  C000h      |-------------------------|
+             |                         |
+             |   STATIC RAM PAGE (0)   |
+             |                         |
+  FFFFh       -------------------------
+
+Furthermore, the ROM is divided into sixteen 16K pages and the RAM is
+divided into eight 16K pages.
+The first 16K, which is from 0000h to 3FFFh, is ROM PAGE 0. This page is
+permanent. It contains frequently used routines.
+The memory area from 4000h to 7FFFh is where the ROM page is swapped in.
+Remember, there are 15 pages that can be swapped into this area. The
+first ROM page (ROM PAGE 0) is permanently at 0000-3FFF, and the next 15
+are swappable here at 4000 to 7FFFh.
+The memory area from 4000h to 7FFFFh is normally set at ROM Page $D when
+you are running the asm program. I determined this myself using the "in"
+instruction on port $05 and displaying the result with $4A33
+Rom Page $D is special. This is the location of the "call table". Now what
+is special about the call table is that when you call a routine (assuming
+you are at rom page $D, which it starts out at), such as _puts, then it
+calls address $4A37. $4A37 then changes the ROM page, calls the routine
+which is in another section of the ROM, and switches you back to the
+original rom page.
+This saves you the trouble of having to worry about switching ROM pages
+all the time. There are at least 1500 ROM calls present in this "call table".
+Also, if you do not use the "call table", then you are at risk with
+incompatibility between ROM versions. As Texas Instruments changes the ROM
+(for additions, corrections, ect), then the location of the ROM routines
+may change. But the location of the routines in the call table stays the
+same. So it is best to use the routines available in the call table for
+maximum compatibility.
+The memory area from 8000h to BFFFh is where the RAM page is swapped in.
+There are 7 pages of RAM that can be swapped in here. The second Ram page,
+(Ram Page 1) contains stacks and (executing ram?). The 3rd - 8th Ram pages
+contains user memory, temporary memory, temporary symbol, and user symbol
+able.
+The first RAM page (RAM PAGE 0) is a permanent RAM page. This page is
+located between C000h and FFFFh. This page contains the system memory,
+cache, and the assembly program, which is stored at $D748, and there is
+about 10K allocated for this. Then the display memory, which is $300 bytes
+or 1024 bytes, is located here at $FC00 and ends at $FFFF.
+That's not all!
+By calling ports, RAM pages can be loaded where ROM pages are usually
+swapped, and ROM pages can be loaded where RAM pages are usually swapped.
+This may be discussed in detail when I learn more about it.
+Also, you can use 24-bit absolute addressing to access any RAM or ROM page
+and without worrying about swapping RAM and ROM pages. This may be
+discussed in detail when I learn more about it.
+You can determine what Rom Version you have (probably 1.2 or 1.3) with
+[2nd] [MODE] [ALPHA] S
+How asm programs are run on the TI-86 
+When you run an assembly program or a call is made to an assembly program,
+the object code is copied to memory location $D748. Then a call is made to
+$D748, and then the program gets executed there. The program stops executing
+when the final "ret" opcode has been processed. It then returns to the
+calling program.
+How programs are assembled
+Every instruction on the Z80, and every other CPU for that matter, is
+really a binary number. An assembler takes all the instructions like ld,
+and all the extra data like strings, and converts them into binary called
+Object code. Object code is all the instructions and extra data converted
+into binary. Each instruction can be grouped into two hex digits, since
+two hex digits is a byte. Extra data like registers and and immediate
+values may make instructions longer.
+You can actually type in assembly programs by hex code on the TI-86. My
+Rom Central CGI uses this ability to determine if you own a TI-86 or not.
+
